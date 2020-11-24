@@ -6,6 +6,7 @@
 #define _ALLOC_H_
 
 #include <cstdlib>
+#include <iostream>
 
 namespace MySTL
 {
@@ -124,21 +125,21 @@ namespace MySTL
 		//缺省补充20个区块
 		size_t nobjs = __NOBJS;
 		char *chunk = chunk_alloc(n, nobjs);
-		obj *result;
+		void *result;
 		obj *cur, *next;
 		if (1 == nobjs)
 		{
-			return chunk;
+			return static_cast<void *>(chunk);
 		}
 		size_t index = FREELIST_INDEX(n);
 
-		result = (obj *)(chunk);
-		free_list[index] = next = (obj *)(chunk + n);
+		result = static_cast<void *>(chunk);
+		free_list[index] = next = reinterpret_cast<obj *>(chunk + n);
 		//将取出的多余的空间加入到相应的free list里面去
 		for (int i = 1; i < nobjs-1 ; ++i)
 		{
 			cur = next;
-			next = (obj *)((char *)next + n);
+			next = reinterpret_cast<obj *>(reinterpret_cast<char *>(next) + n);
 			cur->free_list_link = next;
 		}
 		//注意最后接一个空指针
@@ -146,56 +147,69 @@ namespace MySTL
 		return result;
 	}
 	//内存池管理
-	char *alloc::chunk_alloc(size_t bytes, size_t &nobjs)
+	char *alloc::chunk_alloc(size_t size, size_t &nobjs)
 	{
-		char *result = 0;
-		size_t need_bytes = bytes * nobjs;
+		char *result = nullptr;
+		size_t total_bytes = size * nobjs;
 		size_t bytes_left = end_free - start_free;
 
-		if (bytes_left >= need_bytes)
-		{ //内存池剩余空间完全满足需要
+		//内存池剩余空间完全满足需要
+		if (bytes_left >= total_bytes)
+		{
 			result = start_free;
-			start_free = start_free + need_bytes;
+			start_free += total_bytes;
 			return result;
 		}
-		else if (bytes_left >= bytes)
-		{ //内存池剩余空间不能完全满足需要，但足够供应一个或以上的所需求大小区块
-			nobjs = bytes_left / bytes;
-			need_bytes = nobjs * bytes;
+		//内存池剩余空间不能完全满足需要，但足够供应一个或以上的所需求大小区块
+		else if (bytes_left >= size)
+		{
+			nobjs = bytes_left / size;
+			total_bytes = nobjs * size;
 			result = start_free;
-			start_free += need_bytes;
+			start_free += total_bytes;
 			return result;
 		}
+		//内存池剩余空间连一个区块的大小都无法提供
 		else
-		{ //内存池剩余空间连一个区块的大小都无法提供
-			size_t bytes_to_get = 2 * need_bytes + ROUND_UP(heap_size >> 4);
+		{
+			//回收内存池中残余零头
 			if (bytes_left > 0)
 			{
-				obj **my_free_list = free_list + FREELIST_INDEX(bytes_left);
-				((obj *)start_free)->free_list_link = *my_free_list;
-				*my_free_list = (obj *)start_free;
+				size_t index =  FREELIST_INDEX(bytes_left);
+				obj * tmp = reinterpret_cast<obj *>(start_free);
+				tmp->free_list_link = free_list[index];
+				free_list[index] = tmp;
+				start_free = end_free;
 			}
-			start_free = (char *)malloc(bytes_to_get);
+			//配置heap空间 补充内存池
+			//数量为需求量的两倍，再加上一个随着配置次数增加而越来越大的附加量
+			size_t bytes_to_get = 2 * total_bytes + ROUND_UP(heap_size >> 4);
+			start_free = static_cast<char *>(malloc(bytes_to_get));
+			//堆中无空间，走投无路，则只能尝试从free_list中搜寻比size大的区块 并还到内存池中
+			//搜寻适当的free_list 所谓适当是指“未用区块，且大于size”
 			if (!start_free)
-			{ //malloc都找不到空间，寻找大小相近的空间
-				obj **my_free_list = 0, *p = 0;
-				for (int i = 0; i <= __MAX_BYTES; i += __ALIGN)
+			{
+				for (int i = size; i <= __MAX_BYTES; i += __ALIGN)
 				{
-					my_free_list = free_list + FREELIST_INDEX(i);
-					p = *my_free_list;
-					if (p != 0)
+					size_t index = FREELIST_INDEX(i);
+					obj * p = free_list[index];
+					if (nullptr != p)
 					{
-						*my_free_list = p->free_list_link;
-						start_free = (char *)p;
+						free_list[index] = p->free_list_link;
+						start_free = reinterpret_cast<char *>(p);
 						end_free = start_free + i;
-						return chunk_alloc(bytes, nobjs);
+						return chunk_alloc(size, nobjs);
 					}
 				}
-				end_free = 0;
+				//到处都无内存可用
+				end_free = nullptr;
+				std::cout << "out of memory!";
+				//抛出异常
+				throw std::bad_alloc();
 			}
 			heap_size += bytes_to_get;
 			end_free = start_free + bytes_to_get;
-			return chunk_alloc(bytes, nobjs);
+			return chunk_alloc(size, nobjs);
 		}
 	}
 
