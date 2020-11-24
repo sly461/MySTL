@@ -6,6 +6,7 @@
 #define _ALLOCATOR_H_
 
 #include "construct.hpp"
+#include "alloc.hpp"
 
 namespace MySTL
 {
@@ -43,7 +44,8 @@ namespace MySTL
 	T *allocator<T>::allocate()
 	{
 		//operator new分配内存
-		return static_cast<T *>(::operator new(sizeof(T)));
+		//return static_cast<T *>(::operator new(sizeof(T)));
+		return static_cast<T *>(MySTL::alloc::allocate(sizeof(T)));
 	}
 
 	template <class T>
@@ -52,7 +54,8 @@ namespace MySTL
 		if (0 == n)
 			return nullptr;
 		//operator new分配内存
-		return static_cast<T *>(::operator new(sizeof(T) * n));
+		//return static_cast<T *>(::operator new(sizeof(T) * n));
+		return static_cast<T *>(MySTL::alloc::allocate(sizeof(T) * n));
 	}
 
 	template <class T>
@@ -60,7 +63,8 @@ namespace MySTL
 	{
 		if (nullptr == ptr)
 			return;
-		::operator delete(ptr);
+		//::operator delete(ptr);
+		MySTL::alloc::deallocate(ptr, sizeof(T));
 	}
 
 	template <class T>
@@ -68,7 +72,8 @@ namespace MySTL
 	{
 		if (0 == n || nullptr == ptr)
 			return;
-		::operator delete(ptr);
+		//::operator delete(ptr);
+		MySTL::alloc::deallocate(ptr, sizeof(T) * n);
 	}
 
 	//调用default placement new

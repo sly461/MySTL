@@ -57,8 +57,8 @@ namespace MySTL
 		static char *chunk_alloc(size_t size, size_t &nobjs);
 
 	public:
-		static void *allocate(size_t bytes);
-		static void deallocate(void *ptr, size_t bytes);
+		static void *allocate(size_t n);
+		static void deallocate(void *ptr, size_t n);
 		static void *reallocate(void *ptr, size_t old_sz, size_t new_sz);
 
 	public:
