@@ -15,7 +15,7 @@ namespace MySTL
 		enum{__ALIGN = 8}; //小型区块的上调边界
 		enum{__MAX_BYTES = 128}; //小型区块的上限,超过__MAX_BYTES则直接由malloc分配
 		enum{__NFREELISTS = __MAX_BYTES / __ALIGN}; //free_lists个数
-		enum{NOBJS = 20}; //默认每次从内存池取20个区块
+		enum{__NOBJS = 20}; //默认每次从内存池取20个区块
 
 	private:
 		//将bytes上调至8的倍数
@@ -77,81 +77,75 @@ namespace MySTL
 
 	void *alloc::allocate(size_t n)
 	{
-
+		//大于128就调用一级配置器
 		if (n > (size_t)__MAX_BYTES)
 		{
 			return (malloc(n));
 		}
-		//寻找16个 free_lists 中适当大小的一个去取空间
+		//寻找16个 free_lists 中适当大小的一个空间
 		size_t index = FREELIST_INDEX(n);
 		obj *my_free_list = free_list[index];
-
-		if (my_free_list == 0)
-		{ //没有适合大小的空间，需要从内存池里面取空间
-			void *r = refill(ROUND_UP(n));
-			return r;
-		}
 		//有可用空间，从free_list中取出适合大小的区块
-		free_list[index] = my_free_list->free_list_link;
-		return my_free_list;
+		if (my_free_list)
+		{
+			free_list[index] = my_free_list->free_list_link;
+			return my_free_list;
+		}
+		//没有适合大小的空间，需要从内存池中refill
+		return refill(ROUND_UP(n));
 	}
 
-	void alloc::deallocate(void *p, size_t n)
+	void alloc::deallocate(void *ptr, size_t n)
 	{
-		if (n > __MAX_BYTES)
-		{ //大于128
-			free(p);
+		//大于128
+		if (n > size_t(__MAX_BYTES))
+		{
+			free(ptr);
 		}
+		//收回到free_lists 中
 		else
-		{ //收回到free_lists 中，
+		{
 			size_t index = FREELIST_INDEX(n);
-			obj *node = static_cast<obj *>(p);
+			obj *node = static_cast<obj *>(ptr);
 			node->free_list_link = free_list[index];
 			free_list[index] = node;
 		}
 	}
-	void *alloc::reallocate(void *p, size_t old_sz, size_t new_sz)
+	void *alloc::reallocate(void *ptr, size_t old_sz, size_t new_sz)
 	{
-		deallocate(p, old_sz);
-		p = allocate(new_sz);
+		deallocate(ptr, old_sz);
+		ptr = allocate(new_sz);
 
-		return p;
+		return ptr;
 	}
-	//void* refill(size_t bytes);
-	//bytes 已经被上调到8的倍数
-	void *alloc::refill(size_t bytes)
+	//n 已经被上调到8的倍数
+	void *alloc::refill(size_t n)
 	{
-		size_t nobjs = 20;
-		//chunk_alloc(size_t bytes, size_t& nobjs)，从内存池内取出内存块
-		char *chunk = chunk_alloc(bytes, nobjs);
-		obj **my_fre_list;
+		//缺省补充20个区块
+		size_t nobjs = __NOBJS;
+		char *chunk = chunk_alloc(n, nobjs);
 		obj *result;
-		obj *current_obj, *next_obj;
+		obj *cur, *next;
 		if (1 == nobjs)
 		{
 			return chunk;
 		}
-		my_fre_list = free_list + FREELIST_INDEX(bytes);
+		size_t index = FREELIST_INDEX(n);
 
 		result = (obj *)(chunk);
-		*my_fre_list = next_obj = (obj *)(chunk + bytes);
+		free_list[index] = next = (obj *)(chunk + n);
 		//将取出的多余的空间加入到相应的free list里面去
-		for (int i = 1;; ++i)
+		for (int i = 1; i < nobjs-1 ; ++i)
 		{
-			current_obj = next_obj;
-			next_obj = (obj *)((char *)next_obj + bytes);
-			if (nobjs - 1 == i)
-			{
-				current_obj->free_list_link = 0;
-				break;
-			}
-			else
-			{
-				current_obj->free_list_link = next_obj;
-			}
+			cur = next;
+			next = (obj *)((char *)next + n);
+			cur->free_list_link = next;
 		}
+		//注意最后接一个空指针
+		next->free_list_link = nullptr;
 		return result;
 	}
+	//内存池管理
 	char *alloc::chunk_alloc(size_t bytes, size_t &nobjs)
 	{
 		char *result = 0;
