@@ -37,17 +37,17 @@ class testA {
 
 int main()
 {
-    std::vector<testA, MySTL::allocator<testA>> testVec;
+    std::vector<int, MySTL::allocator<int>> testVec;
     for (int i = 0; i < 100; i++)
     {
-        testVec.push_back(testA(i));
+        testVec.push_back(i);
     }
     for (auto it = testVec.begin(); it != testVec.end(); it++)
     {
-        std::cout << it->a << " ";
+        std::cout << *it << " ";
     }
     std::cout << std::endl;
-    destroy(testVec.begin());
+    //destroy(testVec.begin());
 
     int str[10] = {0, 1};
     void * add = str;
