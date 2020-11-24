@@ -52,7 +52,7 @@ int main()
     int str[10] = {0, 1};
     void * add = str;
     void * add1 = str+1;
-    std::cout << *static_cast<int *>(add+4) << "      " << str[1] << std::endl;
+    //std::cout << *static_cast<int *>(add+4) << "      " << str[1] << std::endl;
     
 
     return 0;
