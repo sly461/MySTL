@@ -47,7 +47,7 @@ int main()
         std::cout << *it << " ";
     }
     std::cout << std::endl;
-    //destroy(testVec.begin());
+    destroy(testVec.begin());
 
     int str[10] = {0, 1};
     void * add = str;
