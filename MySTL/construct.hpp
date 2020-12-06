@@ -25,6 +25,7 @@ namespace MySTL
 	template <class ForwordIterator>
 	void destroy(ForwordIterator first, ForwordIterator last)
 	{
+		//iterator_traits萃取出迭代器或者原生指针所指之物的类型
 		using __value_type = typename std::iterator_traits<ForwordIterator>::value_type;
 		using trivial_destoructor = typename MySTL::__type_traits<__value_type>::has_trivial_destructor;
 		__destroy(first, last, trivial_destoructor());
@@ -35,6 +36,7 @@ namespace MySTL
 	{
 	}
 
+	//与上函数同名 根据不同型别使得重载机制得以有效运行
 	template <class ForwardIterator>
 	void __destroy(ForwardIterator first, ForwardIterator last, MySTL::__false_type)
 	{
