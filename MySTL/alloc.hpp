@@ -124,6 +124,7 @@ namespace MySTL
 	{
 		//缺省补充20个区块
 		size_t nobjs = __NOBJS;
+		//注意此处nobjs是引用传参
 		char *chunk = chunk_alloc(n, nobjs);
 		void *result;
 		obj *cur, *next;
@@ -146,7 +147,7 @@ namespace MySTL
 		next->free_list_link = nullptr;
 		return result;
 	}
-	//内存池管理
+	//内存池管理 注意此处nobjs是引用
 	char *alloc::chunk_alloc(size_t size, size_t &nobjs)
 	{
 		char *result = nullptr;
