@@ -36,7 +36,7 @@ namespace MySTL
 	{
 	}
 
-	//与上函数同名 根据不同型别使得重载机制得以有效运行
+	//与上函数同名 根据不同型别使得重载机制得以有效运行 重载机制是编译时决定（静态联编）
 	template <class ForwardIterator>
 	void __destroy(ForwardIterator first, ForwardIterator last, MySTL::__false_type)
 	{
