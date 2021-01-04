@@ -31,6 +31,7 @@ namespace MySTL {
         vector(size_type n, const T& value) {}
         explicit vector(size_type n) {}
 
+        //析构函数
         ~vector() {
             
         }
