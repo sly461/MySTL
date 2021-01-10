@@ -38,6 +38,9 @@ class testA {
 int main()
 {
     MySTL::vector<int> testVec(10, 3);
+    MySTL::vector<int>::iterator c = testVec.begin();
+    c+=9;
+    std::cout << * (++c);
     // for (int i = 0; i < 100; i++)
     // {
     //     testVec.push_back(i);

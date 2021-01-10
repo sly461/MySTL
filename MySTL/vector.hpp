@@ -47,10 +47,20 @@ namespace MySTL {
         //赋值运算
         vector& operator = (const vector & rhs);
         vector& operator = (vector && rhs);
-        
         //析构函数
-        ~vector() {
-        }
+        ~vector();
+
+        //比较操作
+        bool operator == (const vector& v) const;
+        bool operator != (const vector& v) const;
+
+        //迭代器相关
+        iterator begin() { return start; }
+        iterator end() { return end; }
+
+        //与容量相关
+        
+
     };
 
 
@@ -76,6 +86,16 @@ namespace MySTL {
     void vector<T, Alloc>::fill_initialize(size_type n, const T& value) {
         start = allocate_and_fill(n, value);
         finish = end_of_storage = start + n;
+    }
+    template<class T, class Alloc>
+    template<class InputIterator>
+    vector<T, Alloc>::vector(InputIterator first, InputIterator last) {
+
+    }
+    //析构
+    template<class T, class Alloc>
+    vector<T, Alloc>::~vector() {
+
     }
 
 
