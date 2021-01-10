@@ -6,6 +6,7 @@
 
 #include <new>
 #include "type_traits.hpp"
+#include "iterator.hpp"
 
 namespace MySTL
 {
@@ -26,19 +27,19 @@ namespace MySTL
 	void destroy(ForwordIterator first, ForwordIterator last)
 	{
 		//iterator_traits萃取出迭代器或者原生指针所指之物的类型
-		using __value_type = typename std::iterator_traits<ForwordIterator>::value_type;
-		using trivial_destoructor = typename MySTL::__type_traits<__value_type>::has_trivial_destructor;
+		using __value_type = typename iterator_traits<ForwordIterator>::value_type;
+		using trivial_destoructor = typename __type_traits<__value_type>::has_trivial_destructor;
 		__destroy(first, last, trivial_destoructor());
 	}
 
 	template <class ForwardIterator>
-	void __destroy(ForwardIterator first, ForwardIterator last, MySTL::__true_type)
+	void __destroy(ForwardIterator first, ForwardIterator last, __true_type)
 	{
 	}
 
 	//与上函数同名 根据不同型别使得重载机制得以有效运行 重载机制是编译时决定（静态联编）
 	template <class ForwardIterator>
-	void __destroy(ForwardIterator first, ForwardIterator last, MySTL::__false_type)
+	void __destroy(ForwardIterator first, ForwardIterator last, __false_type)
 	{
 		for (; first < last; ++first)
 		{

@@ -5,9 +5,11 @@
 #define _VECTOR_H_
 
 #include <cstdlib>
+#include <memory>
 #include "allocator.hpp"
 
 namespace MySTL {
+    //声明
     template<class T, class Alloc = allocator<T>>
     class vector {
     public:
@@ -23,19 +25,60 @@ namespace MySTL {
         iterator finish;            //目前使用空间的尾
         iterator end_of_storage;    //目前可用空间的尾
 
+        //分配内存
         using data_allocator = Alloc;
+
+        //配置空间 填满内容 同时设置start、finish、end_of_storage等迭代器
+        iterator allocate_and_fill(size_type n, const T& x);
+        void fill_initialize(size_type n, const T& value);
 
     public:
         //相关构造函数及析构函数及赋值运算符
         vector(): start(nullptr), finish(nullptr), end_of_storage(nullptr) {}
-        vector(size_type n, const T& value) {}
-        explicit vector(size_type n) {}
-
+        vector(size_type n, const T& value) { fill_initialize(n, value); }
+        vector(int n, const T& value) { fill_initialize(n, value); }
+        vector(long n, const T& value) { fill_initialize(n, value); }
+        explicit vector(size_type n) { fill_initialize(n, T()); }
+        template<class InputIterator>
+        vector(InputIterator first, InputIterator last);
+        //拷贝构造
+        vector(const vector & rhs);
+        vector(vector && rhs);
+        //赋值运算
+        vector& operator = (const vector & rhs);
+        vector& operator = (vector && rhs);
+        
         //析构函数
         ~vector() {
-            
         }
+    };
+
+
+
+
+
+
+
+    //实现
+    //配置空间 填满内容
+    template<class T, class Alloc>
+    typename vector<T, Alloc>::iterator vector<T, Alloc>::allocate_and_fill(size_type n, const T& x) {
+        iterator result = data_allocator::allocate(n);
+        //暂时用memory头文件中的函数 
+        //提取迭代器所指对象的类型 value_type()
+        //判断型别是否是POD型别 __type_traits<>
+        //然后采用有效率或者保险安全的初值填写方法
+        std::uninitialized_fill_n(result, n, x);
+        return result;
     }
+    //设置start、finish、end_of_storage等迭代器
+    template<class T, class Alloc> 
+    void vector<T, Alloc>::fill_initialize(size_type n, const T& value) {
+        start = allocate_and_fill(n, value);
+        finish = end_of_storage = start + n;
+    }
+
+
 }
 
 

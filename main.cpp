@@ -1,6 +1,6 @@
-#include <vector>
 #include <iostream>
-#include "MySTL/allocator.hpp"
+#include "MySTL/vector.hpp"
+//#include "MySTL/allocator.hpp"
 
 
 void test(MySTL::__true_type)
@@ -37,21 +37,21 @@ class testA {
 
 int main()
 {
-    std::vector<int, MySTL::allocator<int>> testVec;
-    for (int i = 0; i < 100; i++)
-    {
-        testVec.push_back(i);
-    }
-    for (auto it = testVec.begin(); it != testVec.end(); it++)
-    {
-        std::cout << *it << " ";
-    }
-    std::cout << std::endl;
-    destroy(testVec.begin());
+    MySTL::vector<int> testVec(10, 3);
+    // for (int i = 0; i < 100; i++)
+    // {
+    //     testVec.push_back(i);
+    // }
+    // for (auto it = testVec.begin(); it != testVec.end(); it++)
+    // {
+    //     std::cout << *it << " ";
+    // }
+    // std::cout << std::endl;
+    // destroy(testVec.begin());
 
-    int str[10] = {0, 1};
-    void * add = str;
-    void * add1 = str+1;
+    // int str[10] = {0, 1};
+    // void * add = str;
+    // void * add1 = str+1;
     //std::cout << *static_cast<int *>(add+4) << "      " << str[1] << std::endl;
     
 

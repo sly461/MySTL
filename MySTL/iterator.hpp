@@ -122,7 +122,7 @@ namespace MySTL{
     template<class InputIterator>
     typename iterator_traits<InputIterator>::difference_type
     __distance(InputIterator first, InputIterator last, input_iterator_tag) {
-        iterator_traits<InputIterator>::difference_type n = 0;
+        typename iterator_traits<InputIterator>::difference_type n = 0;
         while(first != last) {
             ++n;
             ++first;
@@ -141,7 +141,7 @@ namespace MySTL{
     template<class InputIterator>
     typename iterator_traits<InputIterator>::difference_type
     distance(InputIterator first, InputIterator last) {
-        __distance(first, n, iterator_category(first));
+        __distance(first, last, iterator_category(first));
     }
 }
 
