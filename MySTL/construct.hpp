@@ -11,6 +11,8 @@
 namespace MySTL
 {
 	//placement new
+	//注意调用该函数时候 使用construct(&*cur, x);这种形式，因为cur可能是原生指针类型，也可能是迭代器类型
+	//所以需要解引用再取地址
 	template <class T1, class T2>
 	void construct(T1 *p, const T2 &value)
 	{

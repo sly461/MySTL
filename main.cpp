@@ -37,10 +37,10 @@ class testA {
 
 int main()
 {
-    MySTL::vector<int> testVec(10, 3);
-    MySTL::vector<int>::iterator c = testVec.begin();
+    MySTL::vector<testA> testVec(10, 3);
+    MySTL::vector<testA>::iterator c = testVec.begin();
     c+=9;
-    std::cout << * (++c);
+    std::cout << c->a;
     // for (int i = 0; i < 100; i++)
     // {
     //     testVec.push_back(i);

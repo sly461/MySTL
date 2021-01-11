@@ -5,8 +5,8 @@
 #define _VECTOR_H_
 
 #include <cstdlib>
-#include <memory>
 #include "allocator.hpp"
+#include "uninitialized.hpp"
 
 namespace MySTL {
     //声明
@@ -50,26 +50,25 @@ namespace MySTL {
         //析构函数
         ~vector();
 
+
         //比较操作
         bool operator == (const vector& v) const;
         bool operator != (const vector& v) const;
 
+
         //迭代器相关
         iterator begin() { return start; }
         iterator end() { return end; }
+
 
         //与容量相关
         
 
     };
 
-
-
-
-
-
-
-    //实现
+    /*****************************************************************************************
+     * 具体实现
+    *****************************************************************************************/
     //配置空间 填满内容
     template<class T, class Alloc>
     typename vector<T, Alloc>::iterator vector<T, Alloc>::allocate_and_fill(size_type n, const T& x) {
@@ -78,7 +77,7 @@ namespace MySTL {
         //提取迭代器所指对象的类型 value_type()
         //判断型别是否是POD型别 __type_traits<>
         //然后采用有效率或者保险安全的初值填写方法
-        std::uninitialized_fill_n(result, n, x);
+        uninitialized_fill_n(result, n, x);
         return result;
     }
     //设置start、finish、end_of_storage等迭代器
@@ -97,7 +96,11 @@ namespace MySTL {
     vector<T, Alloc>::~vector() {
 
     }
-
+    //拷贝构造
+    template<class T, class Alloc>
+    vector<T, Alloc>::vector(const vector & rhs) {
+        
+    }
 
 }
 
