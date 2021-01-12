@@ -37,9 +37,8 @@ class testA {
 
 int main()
 {
-    MySTL::vector<testA> testVec(10, 3);
+    MySTL::vector<testA> testVec(10, testA());
     MySTL::vector<testA>::iterator c = testVec.begin();
-    c+=9;
     std::cout << c->a;
     // for (int i = 0; i < 100; i++)
     // {

@@ -57,7 +57,6 @@ namespace MySTL {
         //cur可能是原生指针，也可能是迭代器，所以需要解引用再取地址
         while(n--) {
             construct(&*cur, x);
-            std::cout<< x <<std::endl;
             ++cur;
         }
         return cur;
