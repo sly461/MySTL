@@ -41,7 +41,7 @@ int main()
     MySTL::vector<testA> testVec(10, testA(3));
     MySTL::vector<testA>::iterator c = testVec.begin();
     c->a = 1;
-    std::cout << c->a;
+    std::cout << c->a << std::endl;
 
 
     std::vector<testA> testVec1(15, testA());
@@ -50,7 +50,7 @@ int main()
     
     MySTL::vector<testA> testVec2(testVec.begin(), testVec.end());
     MySTL::vector<testA>::iterator c2 = testVec2.begin();
-    std::cout<< c2->a;
+    std::cout<< c2->a << std::endl;
 
     // for (int i = 0; i < 100; i++)
     // {
@@ -67,7 +67,8 @@ int main()
     // void * add = str;
     // void * add1 = str+1;
     //std::cout << *static_cast<int *>(add+4) << "      " << str[1] << std::endl;
-    
+    int *aa = new int();
+    std::cout<< *aa << std::endl;
 
     return 0;
 }
