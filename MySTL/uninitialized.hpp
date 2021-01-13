@@ -48,7 +48,7 @@ namespace MySTL {
     template<class ForwardIterator, class Size, class T>
     ForwardIterator __uninitialized_fill_n_aux(ForwardIterator first, Size n, const T& x, __true_type) {
         //调用STL算法fill_n()
-        std::fill_n(first, n, x);
+        return std::fill_n(first, n, x);
     }
     //必须一个一个元素地构造，不能批量
     template<class ForwardIterator, class Size, class T>
@@ -64,13 +64,40 @@ namespace MySTL {
     template<class ForwardIterator, class Size, class T, class T1>
     ForwardIterator __uninitialized_fill_n(ForwardIterator first, Size n, const T& x, T1*) {
         using is_POD = typename __type_traits<T1>::is_POD_type;
-        __uninitialized_fill_n_aux(first, n, x, is_POD());
+        return __uninitialized_fill_n_aux(first, n, x, is_POD());
     }
     template<class ForwardIterator, class Size, class T>
     ForwardIterator uninitialized_fill_n(ForwardIterator first, Size n, const T& x) {
         return __uninitialized_fill_n(first, n, x, value_type(first));
     }
 
+
+    /*****************************************************************************************
+     * uninitialized_copy
+     * 把 [first, last) 上的内容复制到以result为起始处的空间，返回复制结束的位置
+    *****************************************************************************************/
+    template<class InputIterator, class ForwardIterator>
+    ForwardIterator __uninitialized_copy_aux(InputIterator first, InputIterator last, ForwardIterator result, __true_type) {
+        //调用STL算法copy()
+        return std::copy(first, last, result);
+    }
+    //必须一个一个元素地构造，不能批量
+    template<class InputIterator, class ForwardIterator>
+    ForwardIterator __uninitialized_copy_aux(InputIterator first, InputIterator last, ForwardIterator result, __false_type) {
+        ForwardIterator cur = result;
+        //cur可能是原生指针，也可能是迭代器，所以需要解引用再取地址
+        for( ; first!=last; ++first, ++cur) construct(&*cur, *first);
+        return cur;
+    }
+    template<class InputIterator, class ForwardIterator, class T>
+    ForwardIterator __uninitialized_copy(InputIterator first, InputIterator last, ForwardIterator result, T*) {
+        using is_POD = typename __type_traits<T>::is_POD_type;
+        return __uninitialized_copy_aux(first, last, result, is_POD());
+    }
+    template<class InputIterator, class ForwardIterator>
+    ForwardIterator uninitialized_copy(InputIterator first, InputIterator last, ForwardIterator result) {
+        return __uninitialized_copy(first, last, result, value_type(result));
+    }
 }
 
 

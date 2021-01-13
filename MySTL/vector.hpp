@@ -28,9 +28,14 @@ namespace MySTL {
         //分配内存
         using data_allocator = Alloc;
 
-        //配置空间 填满内容 同时设置start、finish、end_of_storage等迭代器
+        //配置空间 填满内容(fill or copy) 同时设置start、finish、end_of_storage等迭代器
         iterator allocate_and_fill(size_type n, const T& x);
+        template<class InputIterator>
+        iterator allocate_and_copy(InputIterator first, InputIterator last);
+        
         void fill_initialize(size_type n, const T& value);
+        template<class InputIterator>
+        void copy_initialize(InputIterator first, InputIterator last);
 
     public:
         //相关构造函数及析构函数及赋值运算符
@@ -40,7 +45,7 @@ namespace MySTL {
         vector(long n, const T& value) { fill_initialize(n, value); }
         explicit vector(size_type n) { fill_initialize(n, T()); }
         template<class InputIterator>
-        vector(InputIterator first, InputIterator last);
+        vector(InputIterator first, InputIterator last) { copy_initialize(first, last); }
         //拷贝构造
         vector(const vector & rhs);
         vector(vector && rhs);
@@ -58,7 +63,7 @@ namespace MySTL {
 
         //迭代器相关
         iterator begin() { return start; }
-        iterator end() { return end; }
+        iterator end() { return finish; }
 
 
         //与容量相关
@@ -74,10 +79,19 @@ namespace MySTL {
     typename vector<T, Alloc>::iterator vector<T, Alloc>::allocate_and_fill(size_type n, const T& x) {
         iterator result = data_allocator::allocate(n);
         //暂时用memory头文件中的函数 
+        //std::uninitialized_fill_n(result, n, x);
         //提取迭代器所指对象的类型 value_type()
         //判断型别是否是POD型别 __type_traits<>
         //然后采用有效率或者保险安全的初值填写方法
         uninitialized_fill_n(result, n, x);
+        return result;
+    }
+    template<class T, class Alloc>
+    template<class InputIterator>
+    typename vector<T, Alloc>::iterator vector<T, Alloc>::allocate_and_copy(InputIterator first, InputIterator last) {
+        size_type n = static_cast<size_type>(last-first);
+        iterator result = data_allocator::allocate(n);
+        uninitialized_copy(first, last, result);
         return result;
     }
     //设置start、finish、end_of_storage等迭代器
@@ -86,10 +100,13 @@ namespace MySTL {
         start = allocate_and_fill(n, value);
         finish = end_of_storage = start + n;
     }
-    template<class T, class Alloc>
+    //设置start、finish、end_of_storage等迭代器
+    template<class T, class Alloc> 
     template<class InputIterator>
-    vector<T, Alloc>::vector(InputIterator first, InputIterator last) {
-
+    void vector<T, Alloc>::copy_initialize(InputIterator first, InputIterator last) {
+        size_type n = static_cast<size_type>(last-first);
+        start = allocate_and_copy(first, last);
+        finish = end_of_storage = start + n;
     }
     //析构
     template<class T, class Alloc>

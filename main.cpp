@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include "MySTL/vector.hpp"
 //#include "MySTL/allocator.hpp"
 
@@ -37,9 +38,20 @@ class testA {
 
 int main()
 {
-    MySTL::vector<testA> testVec(10, testA());
+    MySTL::vector<testA> testVec(10, testA(3));
     MySTL::vector<testA>::iterator c = testVec.begin();
+    c->a = 1;
     std::cout << c->a;
+
+
+    std::vector<testA> testVec1(15, testA());
+    std::vector<testA>::iterator c1 = testVec1.begin();
+    std::cout << c1->a << std::endl;
+    
+    MySTL::vector<testA> testVec2(testVec.begin(), testVec.end());
+    MySTL::vector<testA>::iterator c2 = testVec2.begin();
+    std::cout<< c2->a;
+
     // for (int i = 0; i < 100; i++)
     // {
     //     testVec.push_back(i);
