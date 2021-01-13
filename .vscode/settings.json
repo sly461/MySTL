@@ -35,6 +35,10 @@
         "streambuf": "cpp",
         "system_error": "cpp",
         "typeinfo": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "atomic": "cpp",
+        "cstdarg": "cpp",
+        "cstddef": "cpp",
+        "iterator": "cpp"
     }
 }

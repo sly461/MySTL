@@ -69,6 +69,8 @@ int main()
     //std::cout << *static_cast<int *>(add+4) << "      " << str[1] << std::endl;
     int *aa = new int();
     std::cout<< *aa << std::endl;
+    std::vector<int> kkk(10);
+    std::cout<< kkk[0] << std::endl;
 
     return 0;
 }
