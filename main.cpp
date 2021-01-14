@@ -40,8 +40,10 @@ int main()
 {
     MySTL::vector<testA> testVec(10, testA(3));
     MySTL::vector<testA>::iterator c = testVec.begin();
-    c->a = 1;
+    c->a = 100;
     std::cout << c->a << std::endl;
+    MySTL::vector<testA> testVec3(testVec);
+    std::cout << testVec3.begin()->a << std::endl;
 
 
     std::vector<testA> testVec1(15, testA());

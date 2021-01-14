@@ -47,7 +47,7 @@ namespace MySTL {
         template<class InputIterator>
         vector(InputIterator first, InputIterator last) { copy_initialize(first, last); }
         //拷贝构造
-        vector(const vector & rhs);
+        vector(const vector & rhs) { copy_initialize(rhs.start, rhs.finish); }
         vector(vector && rhs);
         //赋值运算
         vector& operator = (const vector & rhs);
@@ -108,15 +108,20 @@ namespace MySTL {
         start = allocate_and_copy(first, last);
         finish = end_of_storage = start + n;
     }
+    //拷贝构造
+    template<class T, class Alloc>
+    vector<T, Alloc>::vector(vector && rhs)
+        : start(rhs.start),
+          finish(rhs.finish),
+          end_of_storage(rhs.end_of_storage)
+    {
+        rhs.start = rhs.finish = rhs.end_of_storage = nullptr;
+    }
+    //赋值运算
     //析构
     template<class T, class Alloc>
     vector<T, Alloc>::~vector() {
 
-    }
-    //拷贝构造
-    template<class T, class Alloc>
-    vector<T, Alloc>::vector(const vector & rhs) {
-        
     }
 
 }
