@@ -16,7 +16,7 @@
 namespace MySTL {
     /*****************************************************************************************
      * uninitialized_fill 
-     * 在 [first, last) 区间内填充元素值
+     * 在 [first, last) 区间内填充元素值 x
     *****************************************************************************************/
     template<class ForwardIterator, class T>
     void __uninitialized_fill_aux(ForwardIterator first, ForwardIterator last, const T& x, __true_type) {
