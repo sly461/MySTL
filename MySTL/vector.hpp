@@ -118,10 +118,37 @@ namespace MySTL {
         rhs.start = rhs.finish = rhs.end_of_storage = nullptr;
     }
     //赋值运算
+    template<class T, class Alloc>
+    vector<T, Alloc>& vector<T, Alloc>::operator = (const vector & rhs) {
+        //todo
+        return *this;
+    }
+    template<class T, class Alloc>
+    vector<T, Alloc>& vector<T, Alloc>::operator = (vector && rhs) {
+        if(this != &rhs) {
+            //销毁？ todo
+            start = rhs.start;
+            finish = rhs.finish;
+            end_of_storage = rhs.end_of_storage;
+            rhs.start = rhs.finsh = rhs.end_of_storage = nullptr;
+        }
+        return *this;
+    }
     //析构
     template<class T, class Alloc>
     vector<T, Alloc>::~vector() {
 
+    }
+
+
+    //比较操作
+    template<class T, class Alloc>
+    bool vector<T, Alloc>::operator == (const vector& v) const {
+
+    }
+    template<class T, class Alloc>
+    bool vector<T, Alloc>::operator != (const vector& v) const {
+        
     }
 
 }
