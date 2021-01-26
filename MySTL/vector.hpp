@@ -117,7 +117,7 @@ namespace MySTL {
     {
         rhs.start = rhs.finish = rhs.end_of_storage = nullptr;
     }
-    //赋值运算
+    //赋值运算 原来对象如何处理？
     template<class T, class Alloc>
     vector<T, Alloc>& vector<T, Alloc>::operator = (const vector & rhs) {
         //todo
