@@ -22,7 +22,7 @@ namespace MySTL {
     template<class ForwardIterator, class T>
     void __uninitialized_fill_aux(ForwardIterator first, ForwardIterator last, const T& x, __true_type) {
         //调用STL算法fill()
-        
+        std::fill(first, last, x);
     }
     //必须一个一个元素地构造，不能批量
     template<class ForwardIterator, class T>
@@ -79,7 +79,7 @@ namespace MySTL {
     *****************************************************************************************/
     template<class InputIterator, class ForwardIterator>
     ForwardIterator __uninitialized_copy_aux(InputIterator first, InputIterator last, ForwardIterator result, __true_type) {
-        //调用STL算法copy()
+        //调用STL算法copy()  copy算法的完整脉络见p315
         return std::copy(first, last, result);
     }
     //必须一个一个元素地构造，不能批量
