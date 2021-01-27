@@ -13,6 +13,7 @@
 #include "type_traits.hpp"
 #include "iterator.hpp"
 #include "construct.hpp"
+#include "algorithm.hpp"
 
 namespace MySTL {
     /*****************************************************************************************
@@ -80,7 +81,7 @@ namespace MySTL {
     template<class InputIterator, class ForwardIterator>
     ForwardIterator __uninitialized_copy_aux(InputIterator first, InputIterator last, ForwardIterator result, __true_type) {
         //调用STL算法copy()  copy算法的完整脉络见p315
-        return std::copy(first, last, result);
+        return copy(first, last, result);
     }
     //必须一个一个元素地构造，不能批量
     template<class InputIterator, class ForwardIterator>
