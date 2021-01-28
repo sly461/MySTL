@@ -23,7 +23,7 @@ namespace MySTL {
     template<class ForwardIterator, class T>
     void __uninitialized_fill_aux(ForwardIterator first, ForwardIterator last, const T& x, __true_type) {
         //调用STL算法fill()
-        std::fill(first, last, x);
+        fill(first, last, x);
     }
     //必须一个一个元素地构造，不能批量
     template<class ForwardIterator, class T>
@@ -50,7 +50,7 @@ namespace MySTL {
     template<class ForwardIterator, class Size, class T>
     ForwardIterator __uninitialized_fill_n_aux(ForwardIterator first, Size n, const T& x, __true_type) {
         //调用STL算法fill_n()
-        return std::fill_n(first, n, x);
+        return fill_n(first, n, x);
     }
     //必须一个一个元素地构造，不能批量
     template<class ForwardIterator, class Size, class T>

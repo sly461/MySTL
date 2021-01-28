@@ -12,6 +12,37 @@
 namespace MySTL
 {
     /*****************************************************************************************
+     * fill_n
+     * 从 first 位置开始填充 n 个值
+    *****************************************************************************************/
+    template<class OutputIterator, class Size, class T>
+    OutputIterator fill_n(OutputIterator first, Size n, const T & value) {
+        for( ; n>0; --n, ++first) {
+            *first = value;
+        }
+        return first;
+    }
+    /*****************************************************************************************
+     * fill
+     * 为 [first, last)区间内的所有元素填充新值
+    *****************************************************************************************/
+    //ForwardIterator版本
+    template<class ForwardIterator, class T>
+    void __fill(ForwardIterator first, ForwardIterator last, const T & value, forward_iterator_tag) {
+        for( ; first!=last; ++first) {
+            *first = value;
+        }
+    }
+    //RandomAccessIterator版本
+    template<class RandomAccessIterator, class T>
+    void __fill(RandomAccessIterator first, RandomAccessIterator last, const T & value, random_access_iterator_tag) {
+        fill_n(first, last-first, value);
+    }
+    template<class ForwardIterator, class T>
+    void fill(ForwardIterator first, ForwardIterator last, const T & value) {
+        __fill(first, last, value, iterator_category(first));
+    }
+    /*****************************************************************************************
      * copy
      * 把 [first, last) 上的内容复制到以result为起始处的空间，返回复制结束的位置
     *****************************************************************************************/
