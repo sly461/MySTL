@@ -110,13 +110,23 @@ namespace MySTL
             return __copy_t(first, last, result, t());
         }
     };
-    
+    //copy
     template<class InputIterator, class OutputIterator>
     OutputIterator copy(InputIterator first, InputIterator last, OutputIterator result) {
         return __copy_dispatch<InputIterator, OutputIterator>()
                     (first, last, result);
     }
-
+    /*****************************************************************************************
+     * equal
+     * 比较第一序列在 [first, last)区间上的元素值是否和第二序列相等
+    *****************************************************************************************/
+    template<class InputIterator1, class InputIterator2>
+    bool equal(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2) {
+        for( ; first1 != last1; ++first1, ++first2) {
+            if(*first1 != *first2) return false;
+        }
+        return true;
+    }
 }
 
 

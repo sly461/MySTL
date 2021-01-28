@@ -57,11 +57,6 @@ namespace MySTL {
         ~vector();
 
 
-        //比较操作
-        bool operator == (const vector& v) const;
-        bool operator != (const vector& v) const;
-
-
         //迭代器相关
         iterator begin() { return start; }
         const_iterator begin() const { return start; }
@@ -173,18 +168,28 @@ namespace MySTL {
     //析构
     template<class T, class Alloc>
     vector<T, Alloc>::~vector() {
-
+        //销毁对象
+        if(size() != 0) destroy(start, finish);
+        //释放内存
+        if(capacity() != 0) data_allocator::deallocate(start, capacity());
+        start = finsh = end_of_storage = nullptr;
     }
 
 
-    //比较操作
-    template<class T, class Alloc>
-    bool vector<T, Alloc>::operator == (const vector& v) const {
 
+
+
+    /*****************************************************************************************
+     * 其他相关函数
+    *****************************************************************************************/
+    //重载比较操作
+    template<class T, class Alloc>
+    bool operator == (const vector<T, Alloc> & lhs, const vector<T, Alloc> & rhs) {
+        return (size() == v.size() && equal(lhs.begin(), lhs.end(), rhs.begin()));
     }
     template<class T, class Alloc>
-    bool vector<T, Alloc>::operator != (const vector& v) const {
-        
+    bool operator != (const vector<T, Alloc> & lhs, const vector<T, Alloc> & rhs) {
+        return !(lhs == rhs);
     }
 
 }
