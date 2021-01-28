@@ -69,7 +69,7 @@ namespace MySTL
     template<class RandomAccessIterator, class OutputIterator>
     OutputIterator __copy(RandomAccessIterator first, RandomAccessIterator last, OutputIterator result, random_access_iterator_tag) {
         // 又划分一个函数，为的是其他地方也可能用到
-        __copy_d(first, last, result, difference_type(first));
+        return __copy_d(first, last, result, difference_type(first));
     }
     
     //完全泛化版本

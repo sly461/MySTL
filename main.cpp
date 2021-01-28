@@ -34,6 +34,7 @@ class testA {
     public:
         testA(): a(0) {}
         testA(int _a): a(_a) {}
+        testA(const testA & ta) { a = ta.a; std::cout<<"testA copy constructor!"<<std::endl; }
 };
 
 int main()
@@ -46,13 +47,13 @@ int main()
     std::cout << testVec3.begin()->a << std::endl;
 
 
-    std::vector<testA> testVec1(15, testA());
-    std::vector<testA>::iterator c1 = testVec1.begin();
+    MySTL::vector<testA> testVec1(15, testA());
+    MySTL::vector<testA>::iterator c1 = testVec1.begin();
     std::cout << c1->a << std::endl;
     
-    MySTL::vector<testA> testVec2(testVec.begin(), testVec.end());
-    MySTL::vector<testA>::iterator c2 = testVec2.begin();
-    std::cout<< c2->a << std::endl;
+    MySTL::vector<int> testVec2(10, 1);
+    MySTL::vector<int>::iterator c2 = testVec2.begin();
+    std::cout<< *c2 << std::endl;
 
     // for (int i = 0; i < 100; i++)
     // {

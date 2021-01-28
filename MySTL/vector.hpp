@@ -67,6 +67,10 @@ namespace MySTL {
 
 
         //与容量相关
+        difference_type size() const { return finish-start; }
+        difference_type capacity() const { return end_of_storage-start; }
+        bool empty() const { return start==finish; }
+
         
 
     };
@@ -120,7 +124,33 @@ namespace MySTL {
     //赋值运算 原来对象如何处理？
     template<class T, class Alloc>
     vector<T, Alloc>& vector<T, Alloc>::operator = (const vector & rhs) {
-        //todo
+        if(&rhs != this) {
+            const size_type rhsLen = rhs.size();
+            //>capacity 重新申请一块足够大的地址
+            if(rhsLen > capacity()) {
+                iterator tmp = allocate_and_copy(rhs.begin(), rhs.end());
+                //销毁对象
+                destroy(start, finish);
+                //释放内存
+                data_allocator::deallocate(start, end_of_storage-start);
+                start = tmp;
+                end_of_storage = start + rhsLen;
+            }
+            //>size, <=capacity
+            else if(rhsLen > size()) {
+                //<=size的部分
+                copy(rhs.begin(), rhs.begin()+size(), start);
+                //>size的部分 这部分空间尚未初始化（未构造对象）
+                uninitialized_copy(rhs.begin()+size(), rhs.end(), finish);
+            }
+            //<=size
+            else {
+                iterator i = copy(rhs.begin(), rhs.end(), begin());
+                //注意销毁掉[i, finish)的对象
+                destroy(i, finish);
+            }
+            finish = start + rhsLen;
+        }
         return *this;
     }
     template<class T, class Alloc>
