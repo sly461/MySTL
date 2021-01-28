@@ -19,8 +19,10 @@ namespace MySTL {
         using iterator = value_type*;
         using const_iterator = const iterator;
         using reference = value_type&;
+        using const_reference = const reference;
         using size_type = size_t;
         using difference_type = ptrdiff_t;
+
     protected:
         iterator start;             //目前使用空间的头
         iterator finish;            //目前使用空间的尾
@@ -60,21 +62,33 @@ namespace MySTL {
         //迭代器相关
         iterator begin() { return start; }
         const_iterator begin() const { return start; }
+        const_iterator cbegin() const { return start; }
         iterator end() { return finish; }
         const_iterator end() const { return finish; }
+        const_iterator cend() const { return finish; }
+
+
+        //访问元素相关
+        reference operator[] (const size_type i) { return *(begin() + i); }
+        const_reference operator[] (const size_type i) const { return *(begin() + i); }
+        reference front() { return *begin(); }
+        const_reference front() const { return *begin(); }
+        reference back() { return *(end()-1); }
+        const_reference back() const { return *(end()-1); }
 
 
         //与容量相关
         difference_type size() const { return finish-start; }
         difference_type capacity() const { return end_of_storage-start; }
         bool empty() const { return start==finish; }
-
+        void resize(size_type new_size, const value_type & value = value_type());
         
 
     };
 
     /*****************************************************************************************
      * 具体实现
+     * 相关构造函数及析构函数及赋值运算符
     *****************************************************************************************/
     //配置空间 填满内容
     template<class T, class Alloc>
@@ -172,10 +186,19 @@ namespace MySTL {
         if(size() != 0) destroy(start, finish);
         //释放内存
         if(capacity() != 0) data_allocator::deallocate(start, capacity());
-        start = finsh = end_of_storage = nullptr;
+        start = finish = end_of_storage = nullptr;
     }
 
 
+
+    /*****************************************************************************************
+     * 具体实现
+     * 与容量相关
+    *****************************************************************************************/
+    template<class T, class Alloc>
+    void vector<T, Alloc>:: resize(size_type new_size, const value_type & value = value_type()) {
+        
+    }
 
 
 
@@ -185,7 +208,7 @@ namespace MySTL {
     //重载比较操作
     template<class T, class Alloc>
     bool operator == (const vector<T, Alloc> & lhs, const vector<T, Alloc> & rhs) {
-        return (size() == v.size() && equal(lhs.begin(), lhs.end(), rhs.begin()));
+        return (lhs.size() == rhs.size() && equal(lhs.begin(), lhs.end(), rhs.begin()));
     }
     template<class T, class Alloc>
     bool operator != (const vector<T, Alloc> & lhs, const vector<T, Alloc> & rhs) {
