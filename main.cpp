@@ -55,6 +55,9 @@ int main()
     MySTL::vector<int>::iterator c2 = testVec2.begin();
     std::cout<< *c2 << std::endl;
 
+    testVec1 = testVec;
+    std::cout << testVec1.capacity() << " " <<testVec1.size() << " " << testVec1.begin()->a << std::endl;
+
     // for (int i = 0; i < 100; i++)
     // {
     //     testVec.push_back(i);

@@ -17,6 +17,7 @@ namespace MySTL {
         using value_type = T;
         using pointer = value_type*;
         using iterator = value_type*;
+        using const_iterator = const iterator;
         using reference = value_type&;
         using size_type = size_t;
         using difference_type = ptrdiff_t;
@@ -63,7 +64,9 @@ namespace MySTL {
 
         //迭代器相关
         iterator begin() { return start; }
+        const_iterator begin() const { return start; }
         iterator end() { return finish; }
+        const_iterator end() const { return finish; }
 
 
         //与容量相关
@@ -132,7 +135,7 @@ namespace MySTL {
                 //销毁对象
                 destroy(start, finish);
                 //释放内存
-                data_allocator::deallocate(start, end_of_storage-start);
+                data_allocator::deallocate(start, capacity());
                 start = tmp;
                 end_of_storage = start + rhsLen;
             }
@@ -156,7 +159,10 @@ namespace MySTL {
     template<class T, class Alloc>
     vector<T, Alloc>& vector<T, Alloc>::operator = (vector && rhs) {
         if(this != &rhs) {
-            //销毁？ todo
+            //销毁对象
+            if(size() != 0) destroy(start, finish);
+            //释放内存
+            if(capacity() != 0) data_allocator::deallocate(start, capacity());
             start = rhs.start;
             finish = rhs.finish;
             end_of_storage = rhs.end_of_storage;
