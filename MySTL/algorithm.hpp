@@ -117,6 +117,15 @@ namespace MySTL
                     (first, last, result);
     }
     /*****************************************************************************************
+     * copy_backward 逆向复制
+     * 把 [first, last) 内的每个元素，以逆行的方式复制到以result-1为起点，方向亦为逆行的区间上，即[result-(last-first), result)
+    *****************************************************************************************/
+    template<class BidirectionalIterator1, class BidirectionalIterator2>
+    BidirectionalIterator2 copy_backward(BidirectionalIterator1 first, BidirectionalIterator1 last,
+                                         BidirectionalIterator2 result) {
+           
+    }
+    /*****************************************************************************************
      * equal
      * 比较第一序列在 [first, last)区间上的元素值是否和第二序列相等
     *****************************************************************************************/

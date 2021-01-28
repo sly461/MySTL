@@ -52,7 +52,8 @@ int main()
     std::cout << c1->a << std::endl;
     
     MySTL::vector<int> testVec2(10, 1);
-    MySTL::vector<int>::iterator c2 = testVec2.begin();
+    testVec2.push_back(20000);
+    MySTL::vector<int>::iterator c2 = testVec2.end()-1;
     std::cout<< *c2 << std::endl;
 
     testVec1 = testVec;

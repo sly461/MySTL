@@ -40,6 +40,10 @@ namespace MySTL {
         template<class InputIterator>
         void copy_initialize(InputIterator first, InputIterator last);
 
+        //修改容器相关操作
+        //push_back调用 insert调用
+        void insert_aux(iterator position, const T& value);
+
     public:
         //相关构造函数及析构函数及赋值运算符
         vector(): start(nullptr), finish(nullptr), end_of_storage(nullptr) {}
@@ -77,11 +81,15 @@ namespace MySTL {
         const_reference back() const { return *(end()-1); }
 
 
+        //修改容器相关操作
+        void push_back(const value_type & value);
+
+
         //与容量相关
         difference_type size() const { return finish-start; }
         difference_type capacity() const { return end_of_storage-start; }
         bool empty() const { return start==finish; }
-        void resize(size_type new_size, const value_type & value = value_type());
+        //void resize(size_type new_size, const value_type & value = value_type());
         
 
     };
@@ -183,10 +191,74 @@ namespace MySTL {
     template<class T, class Alloc>
     vector<T, Alloc>::~vector() {
         //销毁对象
-        if(size() != 0) destroy(start, finish);
+        if(size() != 0) destroy(begin(), end());
         //释放内存
-        if(capacity() != 0) data_allocator::deallocate(start, capacity());
+        if(capacity() != 0) data_allocator::deallocate(begin(), capacity());
         start = finish = end_of_storage = nullptr;
+    }
+
+
+
+    /*****************************************************************************************
+     * 具体实现
+     * 修改容器相关操作
+    *****************************************************************************************/
+    //供push_back和insert内部使用
+    template<class T, class Alloc>
+    void vector<T, Alloc>::insert_aux(iterator position, const T& value) {
+        //还有备用空间
+        if(finish != end_of_storage) {
+            //在备用空间起始处构造一个元素，并以vector最后一个元素值为其初值
+            construct(finish, *(finish-1));
+            ++finish;
+            T value_copy = value;
+            std::copy_backward(position, finish-2, finish-1);
+            *position = value_copy;
+        }
+        //无备用空间
+        else {
+            const size_type old_size = size();
+            //配置原则
+            //如果原大小为0，则配置1个元素
+            //否则配置原大小的两倍
+            const size_type len = old_size == 0 ? 1 : old_size*2;
+
+            //分配内存
+            iterator new_start = data_allocator::allocate(len);
+            iterator new_finish = new_start;
+            try {
+                //将原vector拷贝到新vector
+                new_finish = uninitialized_copy(start, position, new_start);
+                //构造新值
+                construct(new_finish, value);
+                ++new_finish;
+                //将position及后面的部分拷贝过来
+                new_finish = uninitialized_copy(position, finish, new_finish);
+            }
+            catch(...) {
+                // "commit or rollback"
+                destroy(new_start, new_finish);
+                data_allocator::deallocate(new_start, len);
+            }
+            
+            //销毁原对象并释放空间
+            destroy(begin(), end());
+            data_allocator::deallocate(begin(), capacity());
+
+            //调整迭代器指向新vector
+            start = new_start;
+            finish = new_finish;
+            end_of_storage = new_start + len;
+        }
+    }
+    template<class T, class Alloc>
+    void vector<T, Alloc>::push_back(const value_type & value) {
+        //有备用空间
+        if(finish != end_of_storage) {
+            construct(finish, value);
+            ++finish;
+        }
+        else insert_aux(end(), value);
     }
 
 
@@ -195,10 +267,10 @@ namespace MySTL {
      * 具体实现
      * 与容量相关
     *****************************************************************************************/
-    template<class T, class Alloc>
-    void vector<T, Alloc>:: resize(size_type new_size, const value_type & value = value_type()) {
+    // template<class T, class Alloc>
+    // void vector<T, Alloc>:: resize(size_type new_size, const value_type & value = value_type()) {
         
-    }
+    // }
 
 
 
