@@ -88,7 +88,11 @@ namespace MySTL {
         iterator erase(iterator first, iterator last);
         //销毁对象 但未释放空间
         void clear() { erase(begin(), end()); }
-        void swap(vector& v);
+        void swap(vector& rhs);
+        iterator insert(iterator position, const value_type& value);
+        iterator insert(iterator position, size_type n, const value_type& value);
+        template<class InputIterator>
+        iterator insert(iterator position, InputIterator first, InputIterator last);
 
 
         //与容量相关
@@ -213,6 +217,8 @@ namespace MySTL {
     template<class T, class Alloc>
     void vector<T, Alloc>::insert_aux(iterator position, const T& value) {
         //还有备用空间
+        //但是注意如果finish != end_of_storage && position == end()时候 使用copy_backward函数会出错
+        //因此种情况直接在末尾构造一个元素即可 具体见insert(iterator position, const value_type& value)
         if(finish != end_of_storage) {
             //在备用空间起始处构造一个元素，并以vector最后一个元素值为其初值
             construct(finish, *(finish-1));
@@ -289,6 +295,34 @@ namespace MySTL {
         destroy(i, finish);
         finish = finish - (last - first);
         return first;
+    }
+    template<class T, class Alloc>
+    void vector<T, Alloc>::swap(vector& rhs) {
+        if(this != &rhs) {
+            swap(start, rhs.start);
+            swap(finish, rhs.finish);
+            swap(end_of_storage, rhs.end_of_storage);
+        }
+    }
+    //insert
+    template<class T, class Alloc>
+    vector<T, Alloc>::iterator vector<T, Alloc>::insert(iterator position, const value_type& value) {
+        size_type n = position - begin();
+        if(finish != end_of_storage && position == end()) {
+            construct(finish, value);
+            ++finish;
+        }
+        else {
+            insert_aux(position, value);
+        }
+        //注意此处为何不能直接返回position?
+        //因为可能经过insert_aux函数 原vector的元素可能全部被拷贝到新vector
+        //内存地址改变了，原迭代器都失效了
+        return begin()+n;
+    }
+    template<class T, class Alloc>
+    vector<T, Alloc>::iterator vector<T, Alloc>::insert(iterator position, size_type n, const value_type& value) {
+        
     }
 
 
