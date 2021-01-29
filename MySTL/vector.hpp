@@ -41,10 +41,16 @@ namespace MySTL {
         void copy_initialize(InputIterator first, InputIterator last);
 
         //修改容器相关操作
-        //push_back调用 insert调用 相当于push_back() 是 insert() 函数的一个特例
+        //push_back调用 insert(pos, value)调用 相当于push_back() 是 insert() 函数的一个特例
         void insert_aux(iterator position, const T& value);
-        //insert调用
+        //insert(pos, n, value)调用
         void fill_insert(iterator position, size_type n, const T& value);
+        //insert(pos, first, last)调用
+        template<class InputIterator>
+        void range_insert(iterator position, InputIterator first, InputIterator last, input_iterator_tag);
+        //insert(pos, first, last)调用
+        template<class ForwardIterator>
+        void range_insert(iterator position, ForwardIterator first, ForwardIterator last, forward_iterator_tag);
 
     public:
         //相关构造函数及析构函数及赋值运算符
@@ -101,7 +107,7 @@ namespace MySTL {
         difference_type size() const { return finish-start; }
         difference_type capacity() const { return end_of_storage-start; }
         bool empty() const { return start==finish; }
-        //void resize(size_type new_size, const value_type & value = value_type());
+        void resize(size_type new_size, const value_type & value = value_type());
         
 
     };
@@ -284,6 +290,7 @@ namespace MySTL {
     //清除某个位置上的元素
     template<class T, class Alloc>
     typename vector<T, Alloc>::iterator vector<T, Alloc>::erase(iterator position) {
+        //如果position后面还有元素，需要拷贝;如果position是最后一个元素，则后面没有元素，直接destroy即可
         if(position+1 != end()) {
             copy(position+1, end(), position);
         }
@@ -307,7 +314,7 @@ namespace MySTL {
             swap(end_of_storage, rhs.end_of_storage);
         }
     }
-    //insert
+    //insert(pos, value)
     template<class T, class Alloc>
     typename vector<T, Alloc>::iterator vector<T, Alloc>::insert(iterator position, const value_type& value) {
         size_type n = position - begin();
@@ -323,6 +330,7 @@ namespace MySTL {
         //内存地址改变了，原迭代器都失效了
         return begin()+n;
     }
+    //供insert(pos, n, value)调用
     template<class T, class Alloc>
     void vector<T, Alloc>::fill_insert(iterator position, size_type n, const T& value) {
         if(n == 0) return;
@@ -381,9 +389,31 @@ namespace MySTL {
             end_of_storage = new_start + len;
         }
     }
+    //insert(pos, n, value)
     template<class T, class Alloc>
     void vector<T, Alloc>::insert(iterator position, size_type n, const value_type& value) {
         fill_insert(position, n, value);
+    }
+    //供insert(pos, first, last)调用 InputIterator版本
+    template<class T, class Alloc>
+    template<class InputIterator>
+    void vector<T, Alloc>::range_insert(iterator position, InputIterator first, InputIterator last, input_iterator_tag) {
+        for(; first!=last; ++first) {
+            position = insert(position, *first);
+            ++position;
+        }
+    }
+    //供insert(pos, first, last)调用 ForwardIterator版本
+    template<class T, class Alloc>
+    template<class ForwardIterator>
+    void vector<T, Alloc>::range_insert(iterator position, ForwardIterator first, ForwardIterator last, forward_iterator_tag) {
+        
+    }
+    //insert(pos, first, last)
+    template<class T, class Alloc>
+    template<class InputIterator>
+    void vector<T, Alloc>::insert(iterator position, InputIterator first, InputIterator last) {
+        range_insert(position, first, last, iterator_category(first));
     }
 
 
@@ -392,10 +422,13 @@ namespace MySTL {
      * 具体实现
      * 与容量相关
     *****************************************************************************************/
-    // template<class T, class Alloc>
-    // void vector<T, Alloc>:: resize(size_type new_size, const value_type & value = value_type()) {
-        
-    // }
+    template<class T, class Alloc>
+    void vector<T, Alloc>::resize(size_type new_size, const value_type & value) {
+        if(new_size < size()) {
+            erase(begin() + new_size, end());
+        }
+        else insert(end(), new_size-size(), value);
+    }
 
 
 

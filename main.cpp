@@ -53,9 +53,11 @@ int main()
     
     MySTL::vector<int> testVec2(10, 1);
     //testVec2.push_back(20000);
-    testVec2.insert(testVec2.end(), 20001);
+    //testVec2.insert(testVec2.end(), 20001);
     testVec2.insert(testVec2.begin(), (size_t)3, 20003);
     MySTL::vector<int>::iterator c2 = testVec2.begin();
+    std::cout<< "size: " << testVec2.size() << "capacity: " << testVec2.capacity() << *(c2) << *(c2+1) << *(c2+2) << *(c2+3) << *(testVec2.end()-1) << std::endl;
+    testVec2.resize(10);
     std::cout<< "size: " << testVec2.size() << "capacity: " << testVec2.capacity() << *(c2) << *(c2+1) << *(c2+2) << *(c2+3) << *(testVec2.end()-1) << std::endl;
 
     testVec1 = testVec;
