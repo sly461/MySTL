@@ -41,8 +41,10 @@ namespace MySTL {
         void copy_initialize(InputIterator first, InputIterator last);
 
         //修改容器相关操作
-        //push_back调用 insert调用
+        //push_back调用 insert调用 相当于push_back() 是 insert() 函数的一个特例
         void insert_aux(iterator position, const T& value);
+        //insert调用
+        void fill_insert(iterator position, size_type n, const T& value);
 
     public:
         //相关构造函数及析构函数及赋值运算符
@@ -321,8 +323,35 @@ namespace MySTL {
         return begin()+n;
     }
     template<class T, class Alloc>
+    void vector<T, Alloc>::fill_insert(iterator position, size_type n, const T& value) {
+        if(n == 0) return;
+        //备用空间大等于”新增元素个数“
+        if(size_type(end_of_storage-finish) >= n) {
+            T value_copy = value;
+            // 计算插入点之后的现有元素个数
+            const size_type elems_after = finish - position;
+            iterator old_finish = finish;
+            //因为可能有内存空间重叠的现象出现 因此需要分情况讨论
+            // "插入点之后的现有元素" > "新增元素个数"
+            if(elems_after > n) {
+                uninitialized_copy(finish-n, finish, finish);
+                finish += n;
+                std::copy_backward(position, old_finish-n, old_finish);
+                fill(position, position+n, value);
+            }
+            // "插入点之后的现有元素" <= "新增元素个数"
+            else {
+                
+            }
+        }
+        //备用空间小于“新增元素个数” 需要重新为vector配置内存空间
+        else {
+
+        }
+    }
+    template<class T, class Alloc>
     vector<T, Alloc>::iterator vector<T, Alloc>::insert(iterator position, size_type n, const value_type& value) {
-        
+        fill_insert(position, n, value);
     }
 
 
