@@ -146,6 +146,19 @@ namespace MySTL
         a = b;
         b = tmp;
     }
+    /*****************************************************************************************
+     * max
+     * 取二者中的较大值，语义相等时保证返回第一个参数
+    *****************************************************************************************/
+    template<class T>
+    const T& max(const T& lhs, const T& rhs) {
+        return lhs < rhs ? rhs : lhs;
+    }
+    //重载版本 使用仿函数comp来比较大小
+    template<class T, class Compare>
+    const T& max(const T& lhs, const T& rhs, Compare comp) {
+        return comp(lhs, rhs) ? rhs : lhs;
+    }
 }
 
 

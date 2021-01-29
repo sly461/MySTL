@@ -92,9 +92,9 @@ namespace MySTL {
         void clear() { erase(begin(), end()); }
         void swap(vector& rhs);
         iterator insert(iterator position, const value_type& value);
-        iterator insert(iterator position, size_type n, const value_type& value);
+        void insert(iterator position, size_type n, const value_type& value);
         template<class InputIterator>
-        iterator insert(iterator position, InputIterator first, InputIterator last);
+        void insert(iterator position, InputIterator first, InputIterator last);
 
 
         //与容量相关
@@ -283,7 +283,7 @@ namespace MySTL {
     }
     //清除某个位置上的元素
     template<class T, class Alloc>
-    vector<T, Alloc>::iterator vector<T, Alloc>::erase(iterator position) {
+    typename vector<T, Alloc>::iterator vector<T, Alloc>::erase(iterator position) {
         if(position+1 != end()) {
             copy(position+1, end(), position);
         }
@@ -292,12 +292,13 @@ namespace MySTL {
         return position;
     }
     template<class T, class Alloc>
-    vector<T, Alloc>::iterator vector<T, Alloc>::erase(iterator first, iterator last) {
+    typename vector<T, Alloc>::iterator vector<T, Alloc>::erase(iterator first, iterator last) {
         iterator i = copy(last, finish, first);
         destroy(i, finish);
         finish = finish - (last - first);
         return first;
     }
+    //vector swap 只是交换三个迭代器
     template<class T, class Alloc>
     void vector<T, Alloc>::swap(vector& rhs) {
         if(this != &rhs) {
@@ -308,7 +309,7 @@ namespace MySTL {
     }
     //insert
     template<class T, class Alloc>
-    vector<T, Alloc>::iterator vector<T, Alloc>::insert(iterator position, const value_type& value) {
+    typename vector<T, Alloc>::iterator vector<T, Alloc>::insert(iterator position, const value_type& value) {
         size_type n = position - begin();
         if(finish != end_of_storage && position == end()) {
             construct(finish, value);
@@ -337,20 +338,51 @@ namespace MySTL {
                 uninitialized_copy(finish-n, finish, finish);
                 finish += n;
                 std::copy_backward(position, old_finish-n, old_finish);
-                fill(position, position+n, value);
+                fill(position, position+n, value_copy);
             }
             // "插入点之后的现有元素" <= "新增元素个数"
             else {
-                
+                uninitialized_fill_n(finish, n-elems_after, value_copy);
+                finish += n - elems_after;
+                uninitialized_copy(position, old_finish, finish);
+                finish += elems_after;
+                fill(position, old_finish, value_copy);
             }
         }
         //备用空间小于“新增元素个数” 需要重新为vector配置内存空间
         else {
-
+            //空间配置原则：max(原长度的两倍, 原长度+新增元素个数)
+            const size_type old_size = size();
+            const size_type len = old_size + max(old_size, n);
+            //配置新的vector空间
+            iterator new_start = data_allocator::allocate(len);
+            iterator new_finish = new_start;
+            try{
+                //将旧vector中插入点之前的元素复制到新空间
+                new_finish = uninitialized_copy(start, position, new_start);
+                //新增元素
+                new_finish = uninitialized_fill_n(new_finish, n, value);
+                //将旧vector中插入点之后的元素复制到新空间
+                new_finish = uninitialized_copy(position, finish, new_finish);
+            }
+            catch(...) {
+                // "commit or rollback"
+                //销毁对象并释放空间
+                destroy(new_start, new_finish);
+                data_allocator::deallocate(new_start, len);
+                throw;
+            }
+            // 对旧的vector 销毁对象并释放空间
+            destroy(start, finish);
+            data_allocator::deallocate(start, capacity());
+            //调整迭代器
+            start = new_start;
+            finish = new_finish;
+            end_of_storage = new_start + len;
         }
     }
     template<class T, class Alloc>
-    vector<T, Alloc>::iterator vector<T, Alloc>::insert(iterator position, size_type n, const value_type& value) {
+    void vector<T, Alloc>::insert(iterator position, size_type n, const value_type& value) {
         fill_insert(position, n, value);
     }
 
