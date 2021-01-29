@@ -83,6 +83,12 @@ namespace MySTL {
 
         //修改容器相关操作
         void push_back(const value_type & value);
+        void pop_back();
+        iterator erase(iterator position);
+        iterator erase(iterator first, iterator last);
+        //销毁对象 但未释放空间
+        void clear() { erase(begin(), end()); }
+        void swap(vector& v);
 
 
         //与容量相关
@@ -239,6 +245,7 @@ namespace MySTL {
                 // "commit or rollback"
                 destroy(new_start, new_finish);
                 data_allocator::deallocate(new_start, len);
+                throw;
             }
             
             //销毁原对象并释放空间
@@ -259,6 +266,29 @@ namespace MySTL {
             ++finish;
         }
         else insert_aux(end(), value);
+    }
+    template<class T, class Alloc>
+    void vector<T, Alloc>::pop_back() {
+        --finish;
+        //销毁对象
+        destroy(finish);
+    }
+    //清除某个位置上的元素
+    template<class T, class Alloc>
+    vector<T, Alloc>::iterator vector<T, Alloc>::erase(iterator position) {
+        if(position+1 != end()) {
+            copy(position+1, end(), position);
+        }
+        --finish;
+        destroy(finish);
+        return position;
+    }
+    template<class T, class Alloc>
+    vector<T, Alloc>::iterator vector<T, Alloc>::erase(iterator first, iterator last) {
+        iterator i = copy(last, finish, first);
+        destroy(i, finish);
+        finish = finish - (last - first);
+        return first;
     }
 
 
