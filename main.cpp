@@ -55,9 +55,11 @@ int main()
     std::cout << testVec3.begin()->a << std::endl;
 
 
-    MySTL::vector<testA> testVec1(15, testA());
-    MySTL::vector<testA>::iterator c1 = testVec1.begin();
-    std::cout << c1->a << std::endl;
+    MySTL::vector<testA> testVec1(15, testA(111));
+    testVec1.resize(10);
+    testVec1.shrink_to_fit();
+    for(int i=0; i<15; i++) std::cout << testVec1[i].a << " ";
+    std::cout << std::endl;
     
 
     MySTL::vector<int> testVec100(size_t(10), 100);
@@ -68,7 +70,11 @@ int main()
     MySTL::vector<int>::iterator c2 = testVec2.begin();
     std::cout<< "size: " << testVec2.size() << "capacity: " << testVec2.capacity() << *(c2) << *(c2+1) << *(c2+2) << *(c2+3) << *(testVec2.end()-1) << std::endl;
     testVec2.resize(10);
-    std::cout<< "size: " << testVec2.size() << "capacity: " << testVec2.capacity() << *(c2) << *(c2+1) << *(c2+2) << *(c2+3) << *(testVec2.end()-1) << std::endl;
+    std::cout<< "size: " << testVec2.size() << "capacity: " << testVec2.capacity() << std::endl;
+    testVec2.shrink_to_fit();
+    std::cout<< "size: " << testVec2.size() << "capacity: " << testVec2.capacity() << std::endl;
+    for(int i=0; i<13; i++) std::cout << testVec2[i] << " ";
+    std::cout << std::endl;
 
     testVec1 = testVec;
     std::cout << bool(testVec1 == testVec) << std::endl;
@@ -76,6 +82,11 @@ int main()
 
     testVec2.insert(testVec2.begin(), testVec100.begin(), testVec100.end());
     std::cout << "size: " << testVec2.size() << std::endl;
+
+    testVec2.reserve(10);
+    std::cout << "capacity: " << testVec2.capacity() << std::endl;
+    for(int i=0; i<testVec2.size(); i++) std::cout << testVec2[i] << " ";
+    std::cout << std::endl;
 
     // for (int i = 0; i < 100; i++)
     // {

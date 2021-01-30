@@ -106,6 +106,10 @@ namespace MySTL {
         difference_type capacity() const { return end_of_storage-start; }
         bool empty() const { return start==finish; }
         void resize(size_type new_size, const value_type & value = value_type());
+        void reserve(size_type n);
+        //放弃多余空间 即finish到end_of_storage的空间
+        //减小容器的容量以适应其大小，并破坏超出该容量size的所有元素。
+        void shrink_to_fit();
         
 
     };
@@ -483,6 +487,56 @@ namespace MySTL {
             erase(begin() + new_size, end());
         }
         else insert(end(), new_size-size(), value);
+    }
+    //预留存储空间，若 n 大于当前的 capacity() ，则分配新存储，否则该方法不做任何事。
+    template<class T, class Alloc>
+    void vector<T, Alloc>::reserve(size_type n) {
+        if(capacity() >= n) return;
+        //重新分配内存空间
+        iterator new_start = data_allocator::allocate(n);
+        iterator new_finish = new_start;
+        try {
+            //复制对象
+            new_finish = uninitialized_copy(start, finish, new_start);
+        }
+        catch(...) {
+            //"commit or rollback"
+            destroy(new_start, new_finish);
+            data_allocator::deallocate(new_start, n);
+            throw;
+        }
+        //销毁对象 释放空间
+        destroy(start, finish);
+        data_allocator::deallocate(start, capacity());
+        //调整迭代器
+        start = new_start;
+        finish = new_finish;
+        end_of_storage = new_start + n;
+    }
+    //减小容器的容量以适应其大小，并破坏超出该容量size的所有元素。“破坏”与“销毁”是两个意思
+    template<class T, class Alloc>
+    void vector<T, Alloc>::shrink_to_fit() {
+        if(finish == end_of_storage) return;
+        const size_type old_size = size();
+        //以"重新分配内存空间"的方式”破坏“超出size的元素
+        iterator new_start = data_allocator::allocate(old_size);
+        iterator new_finish = new_start;
+        try {
+            new_finish = uninitialized_copy(start, finish, new_start);
+        }
+        catch(...) {
+            //"commit or rollback"
+            destroy(new_start, new_finish);
+            data_allocator::deallocate(new_start, old_size);
+            throw;
+        }
+        //销毁对象 释放空间
+        destroy(start, finish);
+        data_allocator::deallocate(start, capacity());
+        //调整迭代器
+        start = new_start;
+        finish = new_finish;
+        end_of_storage = new_finish;
     }
 
 
