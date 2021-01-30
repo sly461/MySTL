@@ -51,6 +51,8 @@ int main()
     MySTL::vector<testA>::iterator c1 = testVec1.begin();
     std::cout << c1->a << std::endl;
     
+
+    MySTL::vector<int> testVec100(10, 100);
     MySTL::vector<int> testVec2(10, 1);
     //testVec2.push_back(20000);
     //testVec2.insert(testVec2.end(), 20001);
@@ -62,6 +64,8 @@ int main()
 
     testVec1 = testVec;
     std::cout << testVec1.capacity() << " " <<testVec1.size() << " " << testVec1.begin()->a << std::endl;
+
+    testVec2.insert(testVec2.begin(), testVec100.begin(), testVec100.end());
 
     // for (int i = 0; i < 100; i++)
     // {

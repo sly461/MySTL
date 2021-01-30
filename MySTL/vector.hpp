@@ -407,7 +407,64 @@ namespace MySTL {
     template<class T, class Alloc>
     template<class ForwardIterator>
     void vector<T, Alloc>::range_insert(iterator position, ForwardIterator first, ForwardIterator last, forward_iterator_tag) {
-        
+        if(first == last) return;
+        size_type n = distance(first, last);
+        //备用空间大等于”新增元素个数“
+        if(size_type(end_of_storage-finish) >= n) {
+            // 计算插入点之后的现有元素个数
+            const size_type elems_after = finish - position;
+            iterator old_finish = finish;
+            //因为可能有内存空间重叠的现象出现 因此需要分情况讨论
+            // "插入点之后的现有元素" > "新增元素个数"
+            if(elems_after > n) {
+                uninitialized_copy(finish-n, finish, finish);
+                finish += n;
+                std::copy_backward(position, old_finish-n, old_finish);
+                copy(first, last, position);
+            }
+            // "插入点之后的现有元素" <= "新增元素个数"
+            else {
+                //前移elems_after个位置
+                ForwardIterator mid = first;
+                advance(mid, elems_after);
+                uninitialized_copy(mid, last, finish);
+                finish += n - elems_after;
+                uninitialized_copy(position, old_finish, finish);
+                finish += elems_after;
+                copy(first, mid, position);
+            }
+        }
+        //备用空间小于“新增元素个数” 需要重新为vector配置内存空间
+        else {
+            //空间配置原则：max(原长度的两倍, 原长度+新增元素个数)
+            const size_type old_size = size();
+            const size_type len = old_size + max(old_size, n);
+            //配置新的vector空间
+            iterator new_start = data_allocator::allocate(len);
+            iterator new_finish = new_start;
+            try{
+                //将旧vector中插入点之前的元素复制到新空间
+                new_finish = uninitialized_copy(start, position, new_start);
+                //新增元素
+                new_finish = uninitialized_copy(first, last, new_finish);
+                //将旧vector中插入点之后的元素复制到新空间
+                new_finish = uninitialized_copy(position, finish, new_finish);
+            }
+            catch(...) {
+                // "commit or rollback"
+                //销毁对象并释放空间
+                destroy(new_start, new_finish);
+                data_allocator::deallocate(new_start, len);
+                throw;
+            }
+            // 对旧的vector 销毁对象并释放空间
+            destroy(start, finish);
+            data_allocator::deallocate(start, capacity());
+            //调整迭代器
+            start = new_start;
+            finish = new_finish;
+            end_of_storage = new_start + len;
+        }
     }
     //insert(pos, first, last)
     template<class T, class Alloc>
