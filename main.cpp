@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include "MySTL/vector.hpp"
-//#include "MySTL/allocator.hpp"
 
 
 void test(MySTL::__true_type)
@@ -32,13 +31,19 @@ class testA {
     public:
         int a;
     public:
-        testA(): a(0) {}
+        testA(): a(11) {}
         testA(int _a): a(_a) {}
         testA(const testA & ta) { a = ta.a; std::cout<<"testA copy constructor!"<<std::endl; }
 };
 
 int main()
 {
+    // MySTL::vector<int> intVeck(20, 11);
+    // intVeck[10] = 12;
+    // MySTL::vector<int> intVeckk(intVeck.begin(), intVeck.end());
+    // std::cout << intVeckk.size() << ":" << intVeckk[10] << std::endl;
+    // MySTL::vector<int> intVec(20, 1);
+    // std::cout << *intVec.begin() << std::endl;
     MySTL::vector<testA> testVec(10, testA(3));
     MySTL::vector<testA>::iterator c = testVec.begin();
     c->a = 100;
@@ -52,11 +57,11 @@ int main()
     std::cout << c1->a << std::endl;
     
 
-    MySTL::vector<int> testVec100(10, 100);
-    MySTL::vector<int> testVec2(10, 1);
+    MySTL::vector<int> testVec100(size_t(10), 100);
+    MySTL::vector<int> testVec2(size_t(10), 1);
     //testVec2.push_back(20000);
     //testVec2.insert(testVec2.end(), 20001);
-    testVec2.insert(testVec2.begin(), (size_t)3, 20003);
+    testVec2.insert(testVec2.begin(), size_t(3), 20003);
     MySTL::vector<int>::iterator c2 = testVec2.begin();
     std::cout<< "size: " << testVec2.size() << "capacity: " << testVec2.capacity() << *(c2) << *(c2+1) << *(c2+2) << *(c2+3) << *(testVec2.end()-1) << std::endl;
     testVec2.resize(10);
@@ -66,6 +71,7 @@ int main()
     std::cout << testVec1.capacity() << " " <<testVec1.size() << " " << testVec1.begin()->a << std::endl;
 
     testVec2.insert(testVec2.begin(), testVec100.begin(), testVec100.end());
+    std::cout << "size: " << testVec2.size() << std::endl;
 
     // for (int i = 0; i < 100; i++)
     // {

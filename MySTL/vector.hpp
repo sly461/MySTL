@@ -56,8 +56,6 @@ namespace MySTL {
         //相关构造函数及析构函数及赋值运算符
         vector(): start(nullptr), finish(nullptr), end_of_storage(nullptr) {}
         vector(size_type n, const T& value) { fill_initialize(n, value); }
-        vector(int n, const T& value) { fill_initialize(n, value); }
-        vector(long n, const T& value) { fill_initialize(n, value); }
         explicit vector(size_type n) { fill_initialize(n, T()); }
         template<class InputIterator>
         vector(InputIterator first, InputIterator last) { copy_initialize(first, last); }
