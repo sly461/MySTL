@@ -34,6 +34,9 @@ class testA {
         testA(): a(11) {}
         testA(int _a): a(_a) {}
         testA(const testA & ta) { a = ta.a; std::cout<<"testA copy constructor!"<<std::endl; }
+        bool operator == (const testA& b) { return a==b.a; }
+        bool operator != (const testA& b) { return !(*this==b); }
+
 };
 
 int main()
@@ -68,6 +71,7 @@ int main()
     std::cout<< "size: " << testVec2.size() << "capacity: " << testVec2.capacity() << *(c2) << *(c2+1) << *(c2+2) << *(c2+3) << *(testVec2.end()-1) << std::endl;
 
     testVec1 = testVec;
+    std::cout << bool(testVec1 == testVec) << std::endl;
     std::cout << testVec1.capacity() << " " <<testVec1.size() << " " << testVec1.begin()->a << std::endl;
 
     testVec2.insert(testVec2.begin(), testVec100.begin(), testVec100.end());
