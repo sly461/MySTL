@@ -59,12 +59,16 @@ namespace MySTL {
         explicit vector(size_type n) { fill_initialize(n, T()); }
         template<class InputIterator>
         vector(InputIterator first, InputIterator last) { copy_initialize(first, last); }
+        //列表初始化 注意std::initializer_list<T> 类型对象是一个访问 const T 类型对象数组的轻量代理对象。
+        //因此 ilist.begin()是const T *
+        vector(std::initializer_list<T> ilist) { copy_initialize(ilist.begin(), ilist.end()); }
         //拷贝构造
         vector(const vector & rhs) { copy_initialize(rhs.start, rhs.finish); }
         vector(vector && rhs);
         //赋值运算
         vector& operator = (const vector & rhs);
         vector& operator = (vector && rhs);
+        vector& operator = (std::initializer_list<T> ilist);
         //析构函数
         ~vector();
 
@@ -206,6 +210,10 @@ namespace MySTL {
             rhs.start = rhs.finsh = rhs.end_of_storage = nullptr;
         }
         return *this;
+    }
+    template<class T, class Alloc>
+    vector<T, Alloc>& vector<T, Alloc>::operator = (std::initializer_list<T> ilist) {
+        
     }
     //析构
     template<class T, class Alloc>

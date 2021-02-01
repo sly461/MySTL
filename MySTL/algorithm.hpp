@@ -81,14 +81,14 @@ namespace MySTL
     };
     //__copy_t trivial
     template<class T>
-    T* __copy_t(T* first, T* last, T* result, __true_type) {
+    T* __copy_t(const T* first, const T* last, T* result, __true_type) {
         // memmove以字节为单位copy 在内存覆盖上比memcpy函数做得更好 
         memmove(result, first, (last-first) * sizeof(T));
         return result + (last - first);
     }
     //__copy_t non-trivial
     template<class T>
-    T* __copy_t(T* first, T* last, T* result, __false_type) {
+    T* __copy_t(const T* first, const T* last, T* result, __false_type) {
         //原生指针也是一种RandomAccessIterator
         return __copy_d(first, last, result, difference_type(first));
     }

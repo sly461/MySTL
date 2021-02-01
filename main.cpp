@@ -47,7 +47,8 @@ int main()
     // std::cout << intVeckk.size() << ":" << intVeckk[10] << std::endl;
     // MySTL::vector<int> intVec(20, 1);
     // std::cout << *intVec.begin() << std::endl;
-    MySTL::vector<testA> testVec(10, testA(3));
+    //3隐式转换为testA类型
+    MySTL::vector<testA> testVec(size_t(10), 3);
     MySTL::vector<testA>::iterator c = testVec.begin();
     c->a = 100;
     std::cout << c->a << std::endl;
@@ -63,7 +64,7 @@ int main()
     
 
     MySTL::vector<int> testVec100(size_t(10), 100);
-    MySTL::vector<int> testVec2(size_t(10), 1);
+    MySTL::vector<int> testVec2 = {1,1,1,1,1,1,1,1,1,1};
     testVec2.push_back(20000);
     //testVec2.insert(testVec2.end(), 20001);
     testVec2.insert(testVec2.begin(), size_t(3), 20003);
@@ -103,7 +104,8 @@ int main()
     // void * add = str;
     // void * add1 = str+1;
     //std::cout << *static_cast<int *>(add+4) << "      " << str[1] << std::endl;
-    int *aa = new int(1);
+    int b(122);
+    int *aa = new int(b);
     std::cout<< *aa << std::endl;
     std::vector<int> kkk(10);
     std::cout<< kkk[0] << std::endl;
