@@ -64,7 +64,7 @@ int main()
 
     MySTL::vector<int> testVec100(size_t(10), 100);
     MySTL::vector<int> testVec2(size_t(10), 1);
-    //testVec2.push_back(20000);
+    testVec2.push_back(20000);
     //testVec2.insert(testVec2.end(), 20001);
     testVec2.insert(testVec2.begin(), size_t(3), 20003);
     MySTL::vector<int>::iterator c2 = testVec2.begin();
@@ -103,7 +103,7 @@ int main()
     // void * add = str;
     // void * add1 = str+1;
     //std::cout << *static_cast<int *>(add+4) << "      " << str[1] << std::endl;
-    int *aa = new int();
+    int *aa = new int(1);
     std::cout<< *aa << std::endl;
     std::vector<int> kkk(10);
     std::cout<< kkk[0] << std::endl;
