@@ -64,10 +64,18 @@ int main()
     
 
     MySTL::vector<int> testVec100(size_t(10), 100);
-    MySTL::vector<int> testVec2 = {1,1,1,1,1,1,1,1,1,1};
+    //值初始化 调用默认构造函数
+    MySTL::vector<int> testVec2 = {};
+    for(int i=0; i<testVec2.size(); i++) std::cout << testVec2[i] << " ";
+    std::cout << std::endl;
+    testVec2 = {10,10,10,10,10,10,10,10,10,10};
+    for(int i=0; i<testVec2.size(); i++) std::cout << testVec2[i] << " ";
+    std::cout << std::endl;
     testVec2.push_back(20000);
     //testVec2.insert(testVec2.end(), 20001);
-    testVec2.insert(testVec2.begin(), size_t(3), 20003);
+    testVec2.insert(testVec2.begin(), size_t(20), 20003);
+    for(int i=0; i<testVec2.size(); i++) std::cout << testVec2[i] << " ";
+    std::cout << std::endl;
     MySTL::vector<int>::iterator c2 = testVec2.begin();
     std::cout<< "size: " << testVec2.size() << "capacity: " << testVec2.capacity() << *(c2) << *(c2+1) << *(c2+2) << *(c2+3) << *(testVec2.end()-1) << std::endl;
     testVec2.resize(10);

@@ -211,9 +211,35 @@ namespace MySTL {
         }
         return *this;
     }
+    //与operator = (const vector & rhs) 处理方式相同
     template<class T, class Alloc>
-    vector<T, Alloc>& vector<T, Alloc>::operator = (std::initializer_list<T> ilist) {
-        
+    vector<T, Alloc>& vector<T, Alloc>::operator = (std::initializer_list<T> rhs) {
+        const size_type rhsLen = rhs.size();
+        //>capacity 重新申请一块足够大的地址
+        if(rhsLen > capacity()) {
+            iterator tmp = allocate_and_copy(rhs.begin(), rhs.end());
+            //销毁对象
+            destroy(start, finish);
+            //释放内存
+            data_allocator::deallocate(start, capacity());
+            start = tmp;
+            end_of_storage = start + rhsLen;
+        }
+        //>size, <=capacity
+        else if(rhsLen > size()) {
+            //<=size的部分
+            copy(rhs.begin(), rhs.begin()+size(), start);
+            //>size的部分 这部分空间尚未初始化（未构造对象）
+            uninitialized_copy(rhs.begin()+size(), rhs.end(), finish);
+        }
+        //<=size
+        else {
+            iterator i = copy(rhs.begin(), rhs.end(), begin());
+            //注意销毁掉[i, finish)的对象
+            destroy(i, finish);
+        }
+        finish = start + rhsLen;
+        return *this;
     }
     //析构
     template<class T, class Alloc>
@@ -413,7 +439,7 @@ namespace MySTL {
             ++position;
         }
     }
-    //供insert(pos, first, last)调用 ForwardIterator版本
+    //供insert(pos, first, last)调用 ForwardIterator版本 与fill_insert逻辑相似
     template<class T, class Alloc>
     template<class ForwardIterator>
     void vector<T, Alloc>::range_insert(iterator position, ForwardIterator first, ForwardIterator last, forward_iterator_tag) {
