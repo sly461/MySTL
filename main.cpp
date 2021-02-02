@@ -72,8 +72,9 @@ int main()
     for(int i=0; i<testVec2.size(); i++) std::cout << testVec2[i] << " ";
     std::cout << std::endl;
     testVec2.push_back(20000);
+    testVec2.insert(testVec2.begin(), 20001);
     //testVec2.insert(testVec2.end(), 20001);
-    testVec2.insert(testVec2.begin(), size_t(20), 20003);
+    testVec2.insert(testVec2.begin(), size_t(3), 20003);
     for(int i=0; i<testVec2.size(); i++) std::cout << testVec2[i] << " ";
     std::cout << std::endl;
     MySTL::vector<int>::iterator c2 = testVec2.begin();

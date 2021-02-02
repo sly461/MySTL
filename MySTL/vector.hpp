@@ -268,7 +268,7 @@ namespace MySTL {
             construct(finish, *(finish-1));
             ++finish;
             T value_copy = value;
-            std::copy_backward(position, finish-2, finish-1);
+            copy_backward(position, finish-2, finish-1);
             *position = value_copy;
         }
         //无备用空间
@@ -381,7 +381,7 @@ namespace MySTL {
             if(elems_after > n) {
                 uninitialized_copy(finish-n, finish, finish);
                 finish += n;
-                std::copy_backward(position, old_finish-n, old_finish);
+                copy_backward(position, old_finish-n, old_finish);
                 fill(position, position+n, value_copy);
             }
             // "插入点之后的现有元素" <= "新增元素个数"
@@ -455,7 +455,7 @@ namespace MySTL {
             if(elems_after > n) {
                 uninitialized_copy(finish-n, finish, finish);
                 finish += n;
-                std::copy_backward(position, old_finish-n, old_finish);
+                copy_backward(position, old_finish-n, old_finish);
                 copy(first, last, position);
             }
             // "插入点之后的现有元素" <= "新增元素个数"
