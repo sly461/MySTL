@@ -119,5 +119,23 @@ int main()
     std::vector<int> kkk(10);
     std::cout<< kkk[0] << std::endl;
 
+    MySTL::vector<int> vecInt;
+    //vecInt: 0, 1, 2, 3, 4, 444
+    vecInt.push_back(444);
+	for(int i = 0; i != 5; i++){
+		vecInt.push_back(i);
+	}
+	
+	//erase the element 444
+    auto iter = vecInt.begin();
+	for(iter = vecInt.begin(); iter != vecInt.end(); iter++){
+		if(*iter == 444){		
+			vecInt.erase(iter);		
+            break;	
+		}
+	}
+    std:: cout << "iter：";
+    std::cout << *iter << std::endl;
+
     return 0;
 }
