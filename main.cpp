@@ -1,7 +1,29 @@
 #include <iostream>
 #include <vector>
+#include <string>
 #include "MySTL/vector.hpp"
+using std::cin;
+using std::cout;
+using std::string;
+using std::endl;
 
+struct Test {
+    int a;
+    string b;
+    Test(int _a, string _b):a(_a), b(_b){
+        cout << "construct" << endl;
+    }
+    Test(const Test& test):a(test.a), b(test.b) {
+        cout << "copy" << endl;
+    }
+    Test(Test&& test):a(test.a), b(move(test.b)) {
+        cout << "move" << endl;
+    }
+    Test& operator=(const Test & test) {
+        a = test.a;
+        b = test.b;
+    }
+};
 
 void test(MySTL::__true_type)
 {
@@ -136,6 +158,15 @@ int main()
 	}
     std:: cout << "iter：";
     std::cout << *iter << std::endl;
+
+    MySTL::vector<Test> v;
+    int aaaaa = 0;
+    string bbbbb = "test";
+    Test tt = Test(aaaaa, bbbbb);
+    cout << "--push_back--" << endl;
+    v.push_back(tt);
+    cout << "--push_back--" << endl;
+    v.push_back(Test(aaaaa, bbbbb));
 
     return 0;
 }
