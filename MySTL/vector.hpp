@@ -59,7 +59,7 @@ namespace MySTL {
         explicit vector(size_type n) { fill_initialize(n, T()); }
         template<class InputIterator>
         vector(InputIterator first, InputIterator last) { copy_initialize(first, last); }
-        //列表初始化 注意std::initializer_list<T> 类型对象是一个访问 const T 类型对象数组的轻量代理对象。
+        //初始化列表 注意std::initializer_list<T> 类型对象是一个访问 const T 类型对象数组的轻量代理对象。
         //因此 ilist.begin()是const T *
         vector(std::initializer_list<T> ilist) { copy_initialize(ilist.begin(), ilist.end()); }
         //拷贝构造
@@ -165,7 +165,7 @@ namespace MySTL {
     {
         rhs.start = rhs.finish = rhs.end_of_storage = nullptr;
     }
-    //赋值运算 原来对象如何处理？
+    //赋值运算 原对象该如何处理？
     template<class T, class Alloc>
     vector<T, Alloc>& vector<T, Alloc>::operator = (const vector & rhs) {
         if(&rhs != this) {
@@ -522,7 +522,7 @@ namespace MySTL {
         }
         else insert(end(), new_size-size(), value);
     }
-    //预留存储空间，若 n 大于当前的 capacity() ，则分配新存储，否则该方法不做任何事。
+    //预留存储空间，若 n 大于当前的 capacity() ，则重新分配一块新的更大的内存，否则该方法不做任何事。
     template<class T, class Alloc>
     void vector<T, Alloc>::reserve(size_type n) {
         if(capacity() >= n) return;
