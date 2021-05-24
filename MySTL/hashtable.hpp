@@ -230,16 +230,23 @@ namespace MySTL {
         size_type size() { return num_elements; }
         size_type max_size() { return size_type(-1); }
         bool empty() { return size()==0; }
+
         //与bucket相关
         size_type bucket_count() const { return buckets.size(); }
         size_type max_bucket_count() const { return __stl_prime_list[__stl_num_primes-1]; }
         size_type elems_in_bucket(size_type bucket) const;
 
+        void swap(hashtable& ht);
+        void clear();
+        //判断是否需要表格重建 扩充bucket
+        //判断原则：将元素个数（把新增元素计入后）与bucket vector的大小相比较
+        //若前者大于后者，则重建。因此，每个bucket list的最大size和vecotr的大小相同
+        void resize(size_type num_elements_hint);
+
         iterator begin();
         iterator end() { return iterator(nullptr, this); }
         const_iterator begin() const();
         const_iterator end() const() { return const_iterator(nullptr, this); }
-        void swap(hashtable& ht);
 
         //插入相关
         //插入元素，不允许重复
@@ -277,10 +284,6 @@ namespace MySTL {
         void erase(const const_iterator& it);
         void erase(const_iterator first, const_iterator last);
 
-        void clear();
-        //表格重建 扩充bucket
-        void resize(size_type num_elements_hint);
-
     private:
         //节点配置与释放
         node * new_node(const value_type& obj);
@@ -291,23 +294,35 @@ namespace MySTL {
         //hashtable由vector和linked-list组成，因此复制需要考虑内存相关问题
         void copy_from(const hashtable& ht);
         
+        //判断元素的落脚处
         
     };
 
     /*****************************************************************************************
      * 一些辅助函数的具体实现
-     * 
     *****************************************************************************************/
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
     hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::node*
     hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::new_node(const value_type& obj) {
-
+        node* n = node_allocator::allocate();
+        n->next = nullptr;
+        try {
+            construct(&n->val, obj);
+            return n;
+        }
+        catch(...) {
+            // "commit or rollback"
+            data_allocator::deallocate(n);
+            throw;
+        }
     }
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
     void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::delete_node(node* n) {
-        
+        //销毁对象 释放内存
+        destroy(&n->val);
+        node_allocator::deallocate(n);
     }
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
@@ -317,7 +332,108 @@ namespace MySTL {
         buckets.insert(buckets.end(), n, nullptr);
         num_elements = 0;
     }
-    
+    //深拷贝
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::copy_from(const hashtable& ht) {
+        // 清除掉己方的buckets，调用vector::clear
+        buckets.clear();
+        // 若己方的空间大于对方，就不动，若己方空间小于对方，则增大
+        size_type new_size = ht->buckets.size();
+        buckets.reserve(new_size);
+        // 初始化n个元素为null指针
+        buckets.insert(buckets.end(), new_size, nullptr);
+        try {
+            for(size_type i=0; i<new_size; i++) {
+                //深度拷贝每个bucket list的每个节点
+                if(const node* cur = ht.buckets[i]) {
+                    node* copy = new_node(cur->val);
+                    buckets[i] = copy;
+                    for(node* next=cur->next; next; cur=next,next=cur->next) {
+                        copy->next = new_node(next->val);
+                        copy = copy->next;
+                    }
+                }
+            }
+            num_elements = n;
+        }
+        catch(...) {
+            // commit or rollback
+            clear();
+            throw;
+        }
+    }
+
+    /*****************************************************************************************
+     * 与bucket相关，swap，clear，判断是否需要表格重建、扩充bucket
+    *****************************************************************************************/
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::swap(hashtable& ht) {
+        MySTL::swap(hash, ht.hash);
+        MySTL::swap(equals, ht.equals);
+        MySTL::swap(get_key, ht.get_key);
+        buckets.swap(ht->buckets);
+        MySTL::swap(num_elements, ht.num_elements);
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::size_type 
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::elems_in_bucket(size_type bucket) const {
+        size_type result = 0;
+        for(node* cur=buckets[bucket]; cur; cur=cur->next)
+            result++;
+        return result;
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::clear() {
+        for(size_type i=0; i<buckets.size(); i++) {
+            node* cur = buckets[i];
+            while(cur) {
+                node *next = cur->next;
+                delete_node(cur);
+                cur = next;
+            }
+            buckets[i] = nullptr;
+        }
+        num_elements = 0;
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::resize(size_type num_elements_hint) {
+        const size_type old_n = buckets.size();
+        if(num_elements_hint <= old_n) return;
+        //需要重新配置
+        const size_type n = next_size(num_elements_hint);
+        if(n <= old_n) return;
+        vector<node *> tmp(n, nullptr);
+        try {
+            for(size_type bucket=0; bucket<old_n; bucket++) {
+                node * first = buckets[bucket];
+                while(first) {
+                    size_type new_bucket = bkt_num(first->val, n);
+                    buckets[bucket] = first->next;
+                    first->next = tmp[new_bucket];
+                    tmp[new_bucket] = first;
+                    first = buckets[bucket];
+                }
+            }
+            //新旧对调
+            buckets.swap(tmp);
+        }
+        catch(...) {
+            //commit or callback
+            for(size_type bucket=0; bucket<tmp.size(); bucket++) {
+                while(tmp[bucket]) {
+                    node *next = tmp[bucket]->next;
+                    delete_node(tmp[bucket]);
+                    tmp[bucket] = next;
+                }
+            }
+            throw;
+        }
+    }
 }
 
 
