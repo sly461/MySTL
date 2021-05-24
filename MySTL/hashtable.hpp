@@ -167,7 +167,7 @@ namespace MySTL {
         return __stl_prime_list[__stl_num_primes-1];
     }
     template<class Value, class Key, class HashFcn,
-             class ExtractKey, class EqualKey, template<class T> class Alloc=allocator>
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
     class hashtable {
     public:
         using key_type = Key;
@@ -268,19 +268,56 @@ namespace MySTL {
         //查找相关
         iterator find(const key_type& key);
         const_iterator find(const key_type& key) const;
+        size_type count(const key_type& key) const;
         
+        //erase相关
+        size_type erase(const key_type& key);
+        void erase(const iterator& it);
+        void erase(iterator first, iterator last);
+        void erase(const const_iterator& it);
+        void erase(const_iterator first, const_iterator last);
 
         void clear();
         //表格重建 扩充bucket
         void resize(size_type num_elements_hint);
 
     private:
+        //节点配置与释放
+        node * new_node(const value_type& obj);
+        void delete_node(node* n);
+        //返回最接近n且大等于n的质数
+        size_type next_size(size_type n) const { return __stl_next_prime(n); }
         void initialize_buckets(size_type n);
         //hashtable由vector和linked-list组成，因此复制需要考虑内存相关问题
         void copy_from(const hashtable& ht);
         
         
     };
+
+    /*****************************************************************************************
+     * 一些辅助函数的具体实现
+     * 
+    *****************************************************************************************/
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::node*
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::new_node(const value_type& obj) {
+
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::delete_node(node* n) {
+        
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::initialize_buckets(size_type n) {
+        const size_type n_buckets = next_size(n);
+        buckets.reserve(n_buckets);
+        buckets.insert(buckets.end(), n, nullptr);
+        num_elements = 0;
+    }
+    
 }
 
 
