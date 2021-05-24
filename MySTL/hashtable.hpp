@@ -4,8 +4,10 @@
 #ifndef _HASHTABLE_H_
 #define _HASHTABLE_H_
 
+#include <utility>
 #include "allocator.hpp"
 #include "iterator.hpp"
+#include "vector.hpp"
 
 namespace MySTL {
     /*****************************************************************************************
@@ -23,7 +25,7 @@ namespace MySTL {
      * ExtractKey:从节点中取出键值的方法 EqualKey:判断键值相同与否的方法 Alloc:空间配置器
     *****************************************************************************************/
     template<class Value, class Key, class HashFcn,
-             class ExtractKey, class EqualKey, class Alloc>
+             class ExtractKey, class EqualKey, template<class T> class Alloc=allocator>
     class hashtable;
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, class Alloc>
@@ -165,14 +167,126 @@ namespace MySTL {
         return __stl_prime_list[__stl_num_primes-1];
     }
     template<class Value, class Key, class HashFcn,
-             class ExtractKey, class EqualKey, class Alloc>
+             class ExtractKey, class EqualKey, template<class T> class Alloc=allocator>
     class hashtable {
     public:
+        using key_type = Key;
+        using value_type = Value;
+        using hasher = HashFcn;
+        using key_equal = EqualKey;
+
+        using size_type = size_t;
+        using difference_type = ptrdiff_t;
+        using pointer = value_type*;
+        using const_pointer = const value_type*;
+        using reference = value_type&;
+        using const_reference = const value_type&;
 
     private:
+        using node = __hashtable_node<Value>;
+        //节点的空间配置器
+        using node_allocator = Alloc<node>;
+    
+        hasher hash;
+        key_equal equals;
+        ExtractKey get_key;
+        vector<node*> buckets;
+        size_type num_elements;
+    public:
+        using iterator = __hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+        using const_iterator = __hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+
+        //构造函数
+        hashtable(size_type n, const HashFcn& hf, const EqualKey& eql, const ExtractKey& ext)
+            : hash(hf), equals(eql), get_key(ext) ,num_elements(0)
+        {
+            initialize_buckets(n);
+        }
+        hashtable(size_type n, const HashFcn& hf, const EqualKey& eql)
+            : hash(hf), equals(eql), get_key(ExtractKey()), num_elements(0)
+        {
+            initialize_buckets(n);
+        }
+        hashtable(const hashtable& ht)
+            : hash(ht.hash), equals(ht.equals), get_key(ht.get_key), num_elements(0)
+        {
+            copy_from(ht);
+        }
+        //赋值函数
+        hashtable& operator=(const hashtable& ht) {
+            if(&ht != this) {
+                clear();
+                hash = ht.hash;
+                equals = ht.equals;
+                get_key = ht.get_key;
+                copy_from(ht);
+            }
+            return *this;
+        }
+        //析构函数
+        ~hashtable() { clear(); }
+
+        //几个size相关函数
+        size_type size() { return num_elements; }
+        size_type max_size() { return size_type(-1); }
+        bool empty() { return size()==0; }
+        //与bucket相关
+        size_type bucket_count() const { return buckets.size(); }
+        size_type max_bucket_count() const { return __stl_prime_list[__stl_num_primes-1]; }
+        size_type elems_in_bucket(size_type bucket) const;
+
+        iterator begin();
+        iterator end() { return iterator(nullptr, this); }
+        const_iterator begin() const();
+        const_iterator end() const() { return const_iterator(nullptr, this); }
+        void swap(hashtable& ht);
+
+        //插入相关
+        //插入元素，不允许重复
+        std::pair<iterator, bool> insert_unique(const value_type& obj);
+        //插入元素，允许重复
+        iterator insert_equal(const value_type& obj);
+        //供以上两个函数使用
+        std::pair<iterator, bool> insert_unique_noresize(const value_type& obj);
+        iterator insert_equal_noresize(const value_type& obj);
+        //插入序列
+        template<class InputIterator>
+        void insert_unique(InputIterator first, InputIterator last) { insert_unique(first, last, iterator_category(first)); }
+        template<class InputIterator>
+        void insert_equal(InputIterator first, InputIterator last) { insert_equal(first, last, iterator_category(first)); }
+        //InputIterator类型
+        template<class InputIterator>
+        void insert_unique(InputIterator first, InputIterator last, input_iterator_tag);
+        template<class InputIterator>
+        void insert_equal(InputIterator first, InputIterator last, input_iterator_tag);
+        //ForwardIterator类型及以上
+        template<class ForwardIterator>
+        void insert_unique(ForwardIterator first, ForwardIterator last, forward_iterator_tag);
+        template<class ForwardIterator>
+        void insert_equal(ForwardIterator first, ForwardIterator last, forward_iterator_tag);
+        
+        //查找相关
+        iterator find(const key_type& key);
+        const_iterator find(const key_type& key) const;
+        
+
+        void clear();
+        //表格重建 扩充bucket
+        void resize(size_type num_elements_hint);
+
+    private:
+        void initialize_buckets(size_type n);
+        //hashtable由vector和linked-list组成，因此复制需要考虑内存相关问题
+        void copy_from(const hashtable& ht);
+        
         
     };
 }
+
+
+
+
+
 
 
 
