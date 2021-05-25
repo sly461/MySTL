@@ -249,5 +249,16 @@ int main()
 
     cout<<*(iht.find(2))<<endl;//2
     cout<<iht.count(2)<<endl;//2
+
+
+    MySTL::hashtable<int,
+        int,
+        std::hash<int>,
+        std::_Identity<int>,
+        std::equal_to<int>,
+        MySTL::allocator> iht2(50,std::hash<int>(), std::equal_to<int>());    //指定保留50个bucket(桶)
+
+    cout << (iht!=iht2 ? "true" : "false") << endl;
+
     return 0;
 }

@@ -166,6 +166,7 @@ namespace MySTL {
         //28个质数都比n小
         return __stl_prime_list[__stl_num_primes-1];
     }
+
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
     class hashtable {
@@ -289,9 +290,11 @@ namespace MySTL {
         void erase(const const_iterator& it);
         void erase(const_iterator first, const_iterator last);
 
-        //声明友元 operator==
-        friend bool operator== (const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>&,
-                                const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>&);
+        //声明友元 operator== 注意此处template不能省略且模板参数名字不能和hashtable类相同
+        template<class Vl, class Ky, class HF,
+             class Ex, class Eq, template<class t> class Al>
+        friend bool operator== (const hashtable<Vl, Ky, HF, Ex, Eq, Al>& ht1,
+                                const hashtable<Vl, Ky, HF, Ex, Eq, Al>& ht2);
         
     private:
         //节点配置与释放
@@ -731,11 +734,11 @@ namespace MySTL {
     /*****************************************************************************************
      * operator== operator!=
     *****************************************************************************************/
-    template<class Value, class Key, class HashFcn,
-             class ExtractKey, class EqualKey, template<class T> class Alloc>
-    bool operator== (const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& ht1,
-                     const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& ht2) {
-        using node  = typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::node;
+    template<class Vl, class Ky, class HF,
+             class Ex, class Eq, template<class t> class Al>
+    bool operator== (const hashtable<Vl, Ky, HF, Ex, Eq, Al>& ht1,
+                     const hashtable<Vl, Ky, HF, Ex, Eq, Al>& ht2) {
+        using node  = typename hashtable<Vl, Ky, HF, Ex, Eq, Al>::node;
         if(ht1.buckets.size() != ht2.buckets.size()) return false;
         for(int n=0; n<ht1.buckets.size(); n++) {
             node * cur1 = ht1.buckets[n];
@@ -745,10 +748,10 @@ namespace MySTL {
         }
         return true;
     }
-    template<class Value, class Key, class HashFcn,
-             class ExtractKey, class EqualKey, template<class T> class Alloc>
-    bool operator!= (const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& ht1,
-                     const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& ht2) {
+    template<class Vl, class Ky, class HF,
+             class Ex, class Eq, template<class t> class Al>
+    bool operator!= (const hashtable<Vl, Ky, HF, Ex, Eq, Al>& ht1,
+                     const hashtable<Vl, Ky, HF, Ex, Eq, Al>& ht2) {
         return !(ht1==ht2);
     }                
 
