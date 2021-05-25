@@ -245,8 +245,8 @@ namespace MySTL {
 
         iterator begin();
         iterator end() { return iterator(nullptr, this); }
-        const_iterator begin() const();
-        const_iterator end() const() { return const_iterator(nullptr, this); }
+        const_iterator begin() const;
+        const_iterator end() const { return const_iterator(nullptr, this); }
 
         //插入相关
         //插入元素，不允许重复
@@ -295,7 +295,21 @@ namespace MySTL {
         void copy_from(const hashtable& ht);
         
         //判断元素的落脚处
+        //版本1：接受value和buckets个数
+        size_type bkt_num(const value_type& obj, size_type n) const 
+        { return bkt_num_key(get_key(obj), n);  }
+        //版本2：接受value
+        size_type bkt_num(const value_type& obj) const
+        { return bkt_num_key(get_key(obj)); }
+        //版本3：接受key
+        size_type bkt_num_key(const key_type& key) const
+        { return bkt_num_key(key, buckets.size()); }
+        //版本4：接受key和buckets个数
+        size_type bkt_num_key(const key_type& key, size_type n) const
+        { return hash(key)%n; }
         
+        //erase辅助函数 erase掉指定bucket下 [first, last)范围内节点
+        void erase_bucket(const size_type n, node* first, node* last);
     };
 
     /*****************************************************************************************
@@ -336,6 +350,7 @@ namespace MySTL {
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
     void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::copy_from(const hashtable& ht) {
+        // (注意：调用此函数之前，已经调用hashtable::clear函数将bucket list上的节点销毁并释放内存，同时所有buckets[i]=nullptr)
         // 清除掉己方的buckets，调用vector::clear
         buckets.clear();
         // 若己方的空间大于对方，就不动，若己方空间小于对方，则增大
@@ -362,6 +377,26 @@ namespace MySTL {
             clear();
             throw;
         }
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::erase_bucket(const size_type n, node* first, node* last) {
+        //添加一个辅助头节点
+        node * head = new_node(Value());
+        head->next = buckets[n];
+        node * cur = head;
+        node * next = cur->next;
+        //找到first
+        for(next = cur->next; next!=first; cur=next, next=cur->next) ;
+        while(next != last) {
+            cur->next = next->next;
+            delete_node(next);
+            next = cur->next;
+            num_elements--;
+        }
+        buckets[n] = head->next;
+        //销毁并释放掉辅助头节点
+        delete_node(head);
     }
 
     /*****************************************************************************************
@@ -434,11 +469,257 @@ namespace MySTL {
             throw;
         }
     }
+
+    /*****************************************************************************************
+     * begin()函数
+    *****************************************************************************************/
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::begin() {
+        for(size_type n=0; n<buckets.size(); n++) {
+            if(buckets[n]) return iterator(buckets[n], this);
+        }
+        return end();
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::const_iterator 
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::begin() const {
+        for(size_type n=0; n<buckets.size(); n++) {
+            if(buckets[n]) return const_iterator(buckets[n], this);
+        }
+        return end();
+    }
+
+    /*****************************************************************************************
+     * 插入相关
+    *****************************************************************************************/
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    std::pair<typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator, bool> 
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::insert_unique(const value_type& obj) {
+        //判断新加入一个元素后是否需要重建表格
+        resize(num_elements+1);
+        insert_unique_noresize(obj);
+    }
+    //供insert_unique使用
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    std::pair<typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator, bool> 
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::insert_unique_noresize(const value_type& obj) {
+        const size_type n = bkt_num(obj);
+        node * first = buckets[n];
+        for(node cur=first; cur; cur=cur->next) {
+            // 判断hashtable中是否已存在相同的键值
+            if(equals(get_key(cur->val), get_key(obj)))
+                return std::pair<iterator, bool>(iterator(cur, this), false);
+        }
+        //头插法
+        node * tmp = new_node(obj);
+        tmp->next = first;
+        buckets[n] = tmp;
+        num_elements++;
+        return std::pair<iterator, bool>(iterator(tmp, this), true);
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::insert_equal(const value_type& obj) {
+        resize(num_elements+1);
+        insert_equal_noresize(obj);
+    }
+    //供insert_equal使用
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::insert_equal_noresize(const value_type& obj) {
+        const size_type n = bkt_num(obj);
+        node * first = buckets[n];
+        for(node cur=first; cur; cur=cur->next) {
+            // 键值同，插入后面
+            if(equals(get_key(cur->val), get_key(obj))) {
+                node * tmp = new_node(obj);
+                tmp->next = cur->next;
+                cur->next = tmp;
+                num_elements++;
+                return iterator(tmp, this);
+            }
+        }
+        //头插法
+        node * tmp = new_node(obj);
+        tmp->next = first;
+        buckets[n] = tmp;
+        num_elements++;
+        return iterator(tmp, this);
+    }
+    
+    //插入序列
+    //InputIterator类型
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    template<class InputIterator>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::insert_unique(InputIterator first, InputIterator last, input_iterator_tag) {
+        for( ; first!=last; first++)
+            insert_unique(*first);
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    template<class InputIterator>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::insert_equal(InputIterator first, InputIterator last, input_iterator_tag) {
+        for( ; first!=last; first++)
+            insert_equal(*first);
+    }
+    //ForwardIterator类型及以上
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    template<class ForwardIterator>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::insert_unique(ForwardIterator first, ForwardIterator last, forward_iterator_tag) {
+        size_type n = distance(first, last);
+        resize(num_elements+n);
+        for( ; n>0; n--,first++)
+            insert_unique_noresize(*first);
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    template<class ForwardIterator>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::insert_equal(ForwardIterator first, ForwardIterator last, forward_iterator_tag) {
+        size_type n = distance(first, last);
+        resize(num_elements+n);
+        for( ; n>0; n--,first++)
+            insert_equal_noresize(*first);
+    }
+
+    /*****************************************************************************************
+     * 查找相关
+    *****************************************************************************************/
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::find(const key_type& key) {
+        size_type n = bkt_num_key(key);
+        node * first;
+        for(first=buckets[n]; first&&!equals(key, get_key(first->val)); first=first->next) ;
+        //若未找到，first=nullptr
+        return iterator(first, this);
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::const_iterator
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::find(const key_type& key) const {
+        size_type n = bkt_num_key(key);
+        const node * first;
+        for(first=buckets[n]; first&&!equals(key, get_key(first->val)); first=first->next) ;
+        return const_iterator(first, this);
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::size_type
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::count(const key_type& key) const {
+        const size_type n = bkt_num_key(key);
+        size_type result = 0;
+        for(const node* cur=buckets[n]; cur; cur=cur->next) {
+            if(equals(key, get_key(cur->val)))
+                result++;
+        }
+        return result;
+    }
+
+    /*****************************************************************************************
+     * erase相关
+    *****************************************************************************************/
+    //删除指定节点（键值不唯一时可能会删除多个节点）
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::size_type
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::erase(const key_type& key) {
+        const size_type n = bkt_num_key(key);
+        node * first = buckets[n];
+        size_type erased = 0;
+        if(first) {
+            node * cur = first;
+            node * next = cur->next;
+            while(next) {
+                if(equals(key, get_key(next->val))) {
+                    cur->next = next->next;
+                    delete_node(next);
+                    next = cur->next;
+                    erased++;
+                    num_elements--;
+                }
+                else {
+                    cur = next;
+                    next = cur->next;
+                }
+            }
+            if(equals(key, get_key(first->val))) {
+                buckets[n] = first->next;
+                delete_node(first);
+                erased++;
+                num_elements--;
+            }
+        }
+        return erased;
+    }
+    //删除一个节点
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::erase(const iterator& it) {
+        node *p = it.cur;
+        if(p) {
+            const size_type n = bkt_num(p->val);
+            node * cur = buckets[n];
+            if(cur == p) {
+                buckets[n] = cur->next;
+                delete_node(cur);
+                num_elements--;
+            }
+            else {
+                node * next = cur->next;
+                while(next) {
+                    if(next == p) {
+                        cur->next = next->next;
+                        delete_node(next);
+                        num_elements--;
+                        break;
+                    }
+                    else {
+                        cur = next;
+                        next = cur->next;
+                    }
+                }
+            }
+        }
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::erase(const const_iterator& it) {
+        erase(iterator(const_cast<node*>(it.cur), const_cast<hashtable*>(it.ht)));
+    }
+    //删除序列
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::erase(iterator first, iterator last) {
+        size_type first_bucket = first.cur ? bkt_num(first.cur->val) : buckets.size();
+        size_type last_bucket = last.cur ? bkt_num(last.cur->val) : buckets.size();
+        if(first.cur == last.cur) return;
+        else if(first_bucket == last_bucket)
+            erase_bucket(first_bucket, first.cur, last.cur);
+        else {
+            erase_bucket(first_bucket, first.cur, nullptr);
+            for(size_type n=first_bucket+1; n<last_bucket; n++)
+                erase_bucket(n, buckets[n], nullptr);
+            if(last_bucket != buckets.size())
+                erase_bucket(last_bucket, buckets[last_bucket], last.cur);
+        }
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::erase(const_iterator first, const_iterator last) {
+        erase(iterator(const_cast<node*>(first.cur), const_cast<hashtable*>(first.ht)),
+              iterator(const_cast<node*>(last.cur), const_cast<hashtable*>(last.ht)));
+    }
 }
-
-
-
-
 
 
 
