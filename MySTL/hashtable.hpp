@@ -28,11 +28,11 @@ namespace MySTL {
              class ExtractKey, class EqualKey, template<class T> class Alloc=allocator>
     class hashtable;
     template<class Value, class Key, class HashFcn,
-             class ExtractKey, class EqualKey, class Alloc>
-    class __hashtable_iterator;
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    struct __hashtable_iterator;
     template<class Value, class Key, class HashFcn,
-             class ExtractKey, class EqualKey, class Alloc>
-    class __hashtable_const_iterator;
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    struct __hashtable_const_iterator;
 
     /*****************************************************************************************
      * hashtable的迭代器 
@@ -40,7 +40,7 @@ namespace MySTL {
      * __hashtable_const_iterator
     *****************************************************************************************/
     template<class Value, class Key, class HashFcn,
-             class ExtractKey, class EqualKey, class Alloc>
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
     struct __hashtable_iterator {
         using hashtable = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
         using iterator = __hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
@@ -68,7 +68,7 @@ namespace MySTL {
     };
     //operator++实现
     template<class Value, class Key, class HashFcn,
-             class ExtractKey, class EqualKey, class Alloc>
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
     __hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& 
     __hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>:: operator++() {
         const node* old = cur;
@@ -83,7 +83,7 @@ namespace MySTL {
         return *this;
     }
     template<class Value, class Key, class HashFcn,
-             class ExtractKey, class EqualKey, class Alloc>
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
     __hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc> 
     __hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>:: operator++(int) {
         iterator tmp = this;
@@ -93,7 +93,7 @@ namespace MySTL {
 
     //__hashtable_const_iterator
     template<class Value, class Key, class HashFcn,
-             class ExtractKey, class EqualKey, class Alloc>
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
     struct __hashtable_const_iterator {
         using hashtable = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
         using iterator = __hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
@@ -122,7 +122,7 @@ namespace MySTL {
     };
     //operator++实现
     template<class Value, class Key, class HashFcn,
-             class ExtractKey, class EqualKey, class Alloc>
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
     __hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& 
     __hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>:: operator++() {
         const node* old = cur;
@@ -137,7 +137,7 @@ namespace MySTL {
         return *this;
     }
     template<class Value, class Key, class HashFcn,
-             class ExtractKey, class EqualKey, class Alloc>
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
     __hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc> 
     __hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>:: operator++(int) {
         const_iterator tmp = this;
@@ -195,6 +195,11 @@ namespace MySTL {
     public:
         using iterator = __hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
         using const_iterator = __hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+
+        //声明友元 iterator::operator++中使用了bkt_num函数 
+        friend iterator;
+        friend const_iterator;
+
 
         //构造函数
         hashtable(size_type n, const HashFcn& hf, const EqualKey& eql, const ExtractKey& ext)
@@ -284,6 +289,10 @@ namespace MySTL {
         void erase(const const_iterator& it);
         void erase(const_iterator first, const_iterator last);
 
+        //声明友元 operator==
+        friend bool operator== (const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>&,
+                                const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>&);
+        
     private:
         //节点配置与释放
         node * new_node(const value_type& obj);
@@ -719,6 +728,30 @@ namespace MySTL {
         erase(iterator(const_cast<node*>(first.cur), const_cast<hashtable*>(first.ht)),
               iterator(const_cast<node*>(last.cur), const_cast<hashtable*>(last.ht)));
     }
+    /*****************************************************************************************
+     * operator== operator!=
+    *****************************************************************************************/
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    bool operator== (const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& ht1,
+                     const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& ht2) {
+        using node  = typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::node;
+        if(ht1.buckets.size() != ht2.buckets.size()) return false;
+        for(int n=0; n<ht1.buckets.size(); n++) {
+            node * cur1 = ht1.buckets[n];
+            node * cur2 = ht2.buckets[n];
+            for( ; cur1&&cur2&&cur1->val==cur2->val; cur1=cur1->next, cur2=cur2->next) ;
+            if(cur1 || cur2) return false;
+        }
+        return true;
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    bool operator!= (const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& ht1,
+                     const hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>& ht2) {
+        return !(ht1==ht2);
+    }                
+
 }
 
 

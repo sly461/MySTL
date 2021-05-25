@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include "MySTL/vector.hpp"
+#include "MySTL/hashtable.hpp"
 using std::cin;
 using std::cout;
 using std::string;
@@ -167,6 +168,11 @@ int main()
     v.push_back(tt);
     cout << "--push_back--" << endl;
     v.push_back(Test(aaaaa, bbbbb));
+
+
+    /*****************************************************************************************
+     * hashtable test
+    *****************************************************************************************/
 
     return 0;
 }
