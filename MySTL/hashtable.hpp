@@ -42,7 +42,7 @@ namespace MySTL {
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
     struct __hashtable_iterator {
-        using hashtable = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+        using _Hashtable = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
         using iterator = __hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
         using const_iterator = __hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
         using node = __hashtable_node<Value>;
@@ -55,9 +55,9 @@ namespace MySTL {
         using pointer = Value*;
 
         node *cur;
-        hashtable *ht;
+        _Hashtable *ht;
 
-        __hashtable_iterator(node* n, hashtable* table): cur(n), ht(table) {}
+        __hashtable_iterator(node* n, _Hashtable* table): cur(n), ht(table) {}
         __hashtable_iterator() {}
         reference operator*() const { return cur->val; }
         pointer operator->() const { return &(operator*()); }
@@ -86,7 +86,7 @@ namespace MySTL {
              class ExtractKey, class EqualKey, template<class T> class Alloc>
     __hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc> 
     __hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>:: operator++(int) {
-        iterator tmp = this;
+        iterator tmp = *this;
         ++*this;
         return tmp;
     }
@@ -95,7 +95,7 @@ namespace MySTL {
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
     struct __hashtable_const_iterator {
-        using hashtable = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
+        using _Hashtable = hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
         using iterator = __hashtable_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
         using const_iterator = __hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>;
         using node = __hashtable_node<Value>;
@@ -108,9 +108,9 @@ namespace MySTL {
         using pointer = const Value*;
 
         const node *cur;
-        const hashtable *ht;
+        const _Hashtable *ht;
 
-        __hashtable_const_iterator(const node* n, const hashtable* table): cur(n), ht(table) {}
+        __hashtable_const_iterator(const node* n, const _Hashtable* table): cur(n), ht(table) {}
         __hashtable_const_iterator() {}
         __hashtable_const_iterator(const iterator& it): cur(it.cur), ht(it.ht) {}
         reference operator*() const { return cur->val; }
@@ -326,7 +326,7 @@ namespace MySTL {
     *****************************************************************************************/
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
-    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::node*
+    typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::node*
     hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::new_node(const value_type& obj) {
         node* n = node_allocator::allocate();
         n->next = nullptr;
@@ -336,7 +336,7 @@ namespace MySTL {
         }
         catch(...) {
             // "commit or rollback"
-            data_allocator::deallocate(n);
+            node_allocator::deallocate(n);
             throw;
         }
     }
@@ -352,7 +352,7 @@ namespace MySTL {
     void hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::initialize_buckets(size_type n) {
         const size_type n_buckets = next_size(n);
         buckets.reserve(n_buckets);
-        buckets.insert(buckets.end(), n, nullptr);
+        buckets.insert(buckets.end(), n_buckets, nullptr);
         num_elements = 0;
     }
     //深拷贝
@@ -379,7 +379,7 @@ namespace MySTL {
                     }
                 }
             }
-            num_elements = n;
+            num_elements = ht.num_elements;
         }
         catch(...) {
             // commit or rollback
@@ -417,12 +417,12 @@ namespace MySTL {
         MySTL::swap(hash, ht.hash);
         MySTL::swap(equals, ht.equals);
         MySTL::swap(get_key, ht.get_key);
-        buckets.swap(ht->buckets);
+        buckets.swap(ht.buckets);
         MySTL::swap(num_elements, ht.num_elements);
     }
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
-    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::size_type 
+    typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::size_type 
     hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::elems_in_bucket(size_type bucket) const {
         size_type result = 0;
         for(node* cur=buckets[bucket]; cur; cur=cur->next)
@@ -484,7 +484,7 @@ namespace MySTL {
     *****************************************************************************************/
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
-    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator
+    typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator
     hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::begin() {
         for(size_type n=0; n<buckets.size(); n++) {
             if(buckets[n]) return iterator(buckets[n], this);
@@ -493,7 +493,7 @@ namespace MySTL {
     }
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
-    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::const_iterator 
+    typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::const_iterator 
     hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::begin() const {
         for(size_type n=0; n<buckets.size(); n++) {
             if(buckets[n]) return const_iterator(buckets[n], this);
@@ -519,7 +519,7 @@ namespace MySTL {
     hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::insert_unique_noresize(const value_type& obj) {
         const size_type n = bkt_num(obj);
         node * first = buckets[n];
-        for(node cur=first; cur; cur=cur->next) {
+        for(node* cur=first; cur; cur=cur->next) {
             // 判断hashtable中是否已存在相同的键值
             if(equals(get_key(cur->val), get_key(obj)))
                 return std::pair<iterator, bool>(iterator(cur, this), false);
@@ -533,7 +533,7 @@ namespace MySTL {
     }
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
-    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator
+    typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator
     hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::insert_equal(const value_type& obj) {
         resize(num_elements+1);
         insert_equal_noresize(obj);
@@ -541,11 +541,11 @@ namespace MySTL {
     //供insert_equal使用
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
-    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator
+    typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator
     hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::insert_equal_noresize(const value_type& obj) {
         const size_type n = bkt_num(obj);
         node * first = buckets[n];
-        for(node cur=first; cur; cur=cur->next) {
+        for(node* cur=first; cur; cur=cur->next) {
             // 键值同，插入后面
             if(equals(get_key(cur->val), get_key(obj))) {
                 node * tmp = new_node(obj);
@@ -604,7 +604,7 @@ namespace MySTL {
     *****************************************************************************************/
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
-    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator
+    typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator
     hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::find(const key_type& key) {
         size_type n = bkt_num_key(key);
         node * first;
@@ -614,7 +614,7 @@ namespace MySTL {
     }
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
-    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::const_iterator
+    typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::const_iterator
     hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::find(const key_type& key) const {
         size_type n = bkt_num_key(key);
         const node * first;
@@ -623,7 +623,7 @@ namespace MySTL {
     }
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
-    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::size_type
+    typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::size_type
     hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::count(const key_type& key) const {
         const size_type n = bkt_num_key(key);
         size_type result = 0;
@@ -640,7 +640,7 @@ namespace MySTL {
     //删除指定节点（键值不唯一时可能会删除多个节点）
     template<class Value, class Key, class HashFcn,
              class ExtractKey, class EqualKey, template<class T> class Alloc>
-    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::size_type
+    typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::size_type
     hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::erase(const key_type& key) {
         const size_type n = bkt_num_key(key);
         node * first = buckets[n];

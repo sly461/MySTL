@@ -5,7 +5,9 @@
 #define _VECTOR_H_
 
 #include <cstdlib>
+
 #include "allocator.hpp"
+#include "algorithm.hpp"
 #include "uninitialized.hpp"
 
 namespace MySTL {
@@ -345,9 +347,9 @@ namespace MySTL {
     template<class T, class Alloc>
     void vector<T, Alloc>::swap(vector& rhs) {
         if(this != &rhs) {
-            swap(start, rhs.start);
-            swap(finish, rhs.finish);
-            swap(end_of_storage, rhs.end_of_storage);
+            MySTL::swap(start, rhs.start);
+            MySTL::swap(finish, rhs.finish);
+            MySTL::swap(end_of_storage, rhs.end_of_storage);
         }
     }
     //insert(pos, value)

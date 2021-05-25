@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <hash_set>
 #include "MySTL/vector.hpp"
 #include "MySTL/hashtable.hpp"
 using std::cin;
@@ -160,6 +161,8 @@ int main()
     std:: cout << "iter：";
     std::cout << *iter << std::endl;
 
+    vecInt.swap(testVec2);
+
     MySTL::vector<Test> v;
     int aaaaa = 0;
     string bbbbb = "test";
@@ -173,6 +176,78 @@ int main()
     /*****************************************************************************************
      * hashtable test
     *****************************************************************************************/
+    MySTL::hashtable<int,
+        int,
+        std::hash<int>,
+        std::_Identity<int>,
+        std::equal_to<int>,
+        MySTL::allocator> iht(50,std::hash<int>(), std::equal_to<int>());    //指定保留50个bucket(桶)
+    cout<<iht.size()<<endl;                //0
+    cout<<iht.bucket_count()<<endl;        //53这是STL提供的最小质数
+    cout<<iht.max_bucket_count()<<endl;    //4294967291
 
+    iht.insert_unique(59);
+    iht.insert_unique(63);
+    iht.insert_unique(108);
+    iht.insert_unique(2);
+    iht.insert_unique(53);
+    iht.insert_unique(55);
+    cout<<iht.size()<<endl;                //6,此即hashtable<T>::num_elements
+
+    /*一下声明一个hashtable迭代器*/
+    MySTL::hashtable<int,
+        int,
+        std::hash<int>,
+        std::_Identity<int>,
+        std::equal_to<int>,
+        MySTL::allocator>::iterator ite = iht.begin();
+
+    for(int i = 0;i<iht.size();i++,ite++)
+        cout<< *ite <<' ';    //输出：53 55 2 108 59 63   并没有顺序
+    cout<<endl;
+
+    /*遍历所有buckets,如果其节点个数不为0，就打印节点个数，为0不打印*/
+    for(int i = 0;i<iht.bucket_count();i++)
+    {
+        int n = iht.elems_in_bucket(i);
+        if(n!=0)
+            cout<<"bucket["<<i<<"] has"<<n<<" elems."<<endl;
+    }
+    /*
+    输出：
+    bucket[0] has 1 elems.
+    bucket[2] has 3 elems.
+    bucket[6] has 1 elems.
+    bucket[10] has 1 elems.
+    */
+
+    /*为了验证“bucket(list)”的容量就是buckets vector的大小(这是从
+    hashtable<T>::resize()得知的结果)，我刻意将元素加到54个，
+    看看是否发生重建表*/
+
+    for(int i = 0;i<=47;i++)
+        iht.insert_equal(i);
+    cout<<iht.size()<<endl;        //54
+    cout<<iht.bucket_count()<<endl;    //97确实扩容了(重建)
+
+    for (int i; i<iht.bucket_count();i++ )
+    {
+        int n = iht.elems_in_bucket(i);
+        if(n!=0)
+            cout<<"bucket["<<i<<"] has"<<n<<" elems."<<endl;
+    }
+    /*打印的结果
+    bucket[2]到bucket[11]的节点个数为2
+    其余的bucket[0]~bucket[47]的节点个数为1
+    此外，bucket[53],[55],[59],[63]的节点个数均为1*/
+
+    /*以迭代器变量hashtable,将所有节点打印出来*/
+    ite = iht.begin();
+    for(int i = 0;i<iht.size();i++,ite++)
+        cout<< *ite << ' ';
+    cout<<endl;
+
+    cout<<*(iht.find(2))<<endl;//2
+    cout<<iht.count(2)<<endl;//2
     return 0;
 }
