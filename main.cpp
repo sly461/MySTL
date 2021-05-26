@@ -250,6 +250,11 @@ int main()
     cout<<*(iht.find(2))<<endl;//2
     cout<<iht.count(2)<<endl;//2
 
+    auto _pair = iht.equal_range(2);
+    for(auto i=_pair.first; i!=_pair.second; i++) {
+        cout << *i << " ";
+    }
+    cout<<endl;
 
     MySTL::hashtable<int,
         int,

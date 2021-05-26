@@ -183,6 +183,9 @@ namespace MySTL {
         using reference = value_type&;
         using const_reference = const value_type&;
 
+        hasher hash_funct() const { return hash; }
+        key_equal key_eq() const { return equals; }
+
     private:
         using node = __hashtable_node<Value>;
         //节点的空间配置器
