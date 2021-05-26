@@ -282,7 +282,9 @@ namespace MySTL {
         iterator find(const key_type& key);
         const_iterator find(const key_type& key) const;
         size_type count(const key_type& key) const;
-        
+        std::pair<iterator, iterator> equal_range(const key_type& key);
+        std::pair<const_iterator, const_iterator> equal_range(const key_type& key) const;
+
         //erase相关
         size_type erase(const key_type& key);
         void erase(const iterator& it);
@@ -635,6 +637,56 @@ namespace MySTL {
                 result++;
         }
         return result;
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    std::pair<typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator, 
+              typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::iterator> 
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::equal_range(const key_type& key) {
+        using Pii = std::pair<iterator, iterator>;
+        const size_type n = bkt_num_key(key);
+        for(node* first=buckets[n]; first; first=first->next) {
+            //键值相同的节点是相连在一起的
+            if(equals(key, get_key(first->val))) {
+                for(node* cur=first->next; cur; cur=cur->next) {
+                    if(!equals(key, get_key(cur->val)))
+                        return Pii(iterator(first, this), iterator(cur, this));
+                }
+                //尾后节点
+                for(size_type m=n+1; m<buckets.size(); m++) {
+                    if(buckets[m]) {
+                        return Pii(iterator(first, this), iterator(buckets[m], this));
+                    }
+                }
+                return Pii(iterator(first, this), end());
+            }
+        }
+        return Pii(end(), end());
+    }
+    template<class Value, class Key, class HashFcn,
+             class ExtractKey, class EqualKey, template<class T> class Alloc>
+    std::pair<typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::const_iterator, 
+              typename hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::const_iterator> 
+    hashtable<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>::equal_range(const key_type& key) const {
+        using Pii = std::pair<const_iterator, const_iterator>;
+        const size_type n = bkt_num_key(key);
+        for(const node* first=buckets[n]; first; first=first->next) {
+            //键值相同的节点是相连在一起的
+            if(equals(key, get_key(first->val))) {
+                for(const node* cur=first->next; cur; cur=cur->next) {
+                    if(!equals(key, get_key(cur->val)))
+                        return Pii(const_iterator(first, this), const_iterator(cur, this));
+                }
+                //尾后节点
+                for(size_type m=n+1; m<buckets.size(); m++) {
+                    if(buckets[m]) {
+                        return Pii(const_iterator(first, this), const_iterator(buckets[m], this));
+                    }
+                }
+                return Pii(const_iterator(first, this), end());
+            }
+        }
+        return Pii(end(), end());
     }
 
     /*****************************************************************************************
