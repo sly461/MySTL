@@ -52,7 +52,7 @@ namespace MySTL {
         unordered_set(InputIterator first, InputIterator last, size_type n, const hasher& hf)
             : rep(n, hf, key_equal()) { rep.insert_unique(first, last); }
         template<class InputIterator>
-        unordered_set(InputIterator first, InputIterator last, size_type n, const hasher& , const key_equal& eql)
+        unordered_set(InputIterator first, InputIterator last, size_type n, const hasher& hf, const key_equal& eql)
             : rep(n, hf, eql) { rep.insert_unique(first, last); }
 
         //几个size相关函数

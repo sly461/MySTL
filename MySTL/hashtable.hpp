@@ -140,7 +140,7 @@ namespace MySTL {
              class ExtractKey, class EqualKey, template<class T> class Alloc>
     __hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc> 
     __hashtable_const_iterator<Value, Key, HashFcn, ExtractKey, EqualKey, Alloc>:: operator++(int) {
-        const_iterator tmp = this;
+        const_iterator tmp = *this;
         ++*this;
         return tmp;
     }
@@ -236,9 +236,9 @@ namespace MySTL {
         ~hashtable() { clear(); }
 
         //几个size相关函数
-        size_type size() { return num_elements; }
-        size_type max_size() { return size_type(-1); }
-        bool empty() { return size()==0; }
+        size_type size() const { return num_elements; }
+        size_type max_size() const { return size_type(-1); }
+        bool empty() const { return size()==0; }
 
         //与bucket相关
         size_type bucket_count() const { return buckets.size(); }
