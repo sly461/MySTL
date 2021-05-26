@@ -87,11 +87,17 @@ namespace MySTL {
         //访问元素相关
         reference operator[] (const size_type i) { return *(begin() + i); }
         const_reference operator[] (const size_type i) const { return *(begin() + i); }
+        //at访问 会检查索引是否越界 越界则抛出异常
+        reference at(size_type n) { range_check(n); return (*this)[n]; }
+        const_reference at(size_type n) const { range_check(n); return (*this)[n]; }
         reference front() { return *begin(); }
         const_reference front() const { return *begin(); }
         reference back() { return *(end()-1); }
         const_reference back() const { return *(end()-1); }
-
+        //检查越界
+        void range_check(size_type n) const {
+            if(n >= this->size()) throw "vector range error!";
+        }
 
         //修改容器相关操作
         void push_back(const value_type & value);
@@ -108,6 +114,7 @@ namespace MySTL {
 
 
         //与容量相关
+        size_type max_size() const { return size_type(-1)/sizeof(T); }
         difference_type size() const { return finish-start; }
         difference_type capacity() const { return end_of_storage-start; }
         bool empty() const { return start==finish; }
@@ -133,7 +140,7 @@ namespace MySTL {
         //提取迭代器所指对象的类型 value_type()
         //判断型别是否是POD型别 __type_traits<>
         //然后采用有效率或者保险安全的初值填写方法
-        uninitialized_fill_n(result, n, x);
+        MySTL::uninitialized_fill_n(result, n, x);
         return result;
     }
     template<class T, class Alloc>
@@ -141,7 +148,7 @@ namespace MySTL {
     typename vector<T, Alloc>::iterator vector<T, Alloc>::allocate_and_copy(InputIterator first, InputIterator last) {
         size_type n = static_cast<size_type>(last-first);
         iterator result = data_allocator::allocate(n);
-        uninitialized_copy(first, last, result);
+        MySTL::uninitialized_copy(first, last, result);
         return result;
     }
     //设置start、finish、end_of_storage等迭代器
@@ -185,13 +192,13 @@ namespace MySTL {
             //>size, <=capacity
             else if(rhsLen > size()) {
                 //<=size的部分
-                copy(rhs.begin(), rhs.begin()+size(), start);
+                MySTL::copy(rhs.begin(), rhs.begin()+size(), start);
                 //>size的部分 这部分空间尚未初始化（未构造对象）
-                uninitialized_copy(rhs.begin()+size(), rhs.end(), finish);
+                MySTL::uninitialized_copy(rhs.begin()+size(), rhs.end(), finish);
             }
             //<=size
             else {
-                iterator i = copy(rhs.begin(), rhs.end(), begin());
+                iterator i = MySTL::copy(rhs.begin(), rhs.end(), begin());
                 //注意销毁掉[i, finish)的对象
                 destroy(i, finish);
             }
@@ -270,7 +277,7 @@ namespace MySTL {
             construct(finish, *(finish-1));
             ++finish;
             T value_copy = value;
-            copy_backward(position, finish-2, finish-1);
+            MySTL::copy_backward(position, finish-2, finish-1);
             *position = value_copy;
         }
         //无备用空间
@@ -286,12 +293,12 @@ namespace MySTL {
             iterator new_finish = new_start;
             try {
                 //将原vector拷贝到新vector
-                new_finish = uninitialized_copy(start, position, new_start);
+                new_finish = MySTL::uninitialized_copy(start, position, new_start);
                 //构造新值
                 construct(new_finish, value);
                 ++new_finish;
                 //将position及后面的部分拷贝过来
-                new_finish = uninitialized_copy(position, finish, new_finish);
+                new_finish = MySTL::uninitialized_copy(position, finish, new_finish);
             }
             catch(...) {
                 // "commit or rollback"
@@ -330,7 +337,7 @@ namespace MySTL {
     typename vector<T, Alloc>::iterator vector<T, Alloc>::erase(iterator position) {
         //如果position后面还有元素，需要拷贝;如果position是最后一个元素，则后面没有元素，直接destroy即可
         if(position+1 != end()) {
-            copy(position+1, end(), position);
+            MySTL::copy(position+1, end(), position);
         }
         --finish;
         destroy(finish);
@@ -338,7 +345,7 @@ namespace MySTL {
     }
     template<class T, class Alloc>
     typename vector<T, Alloc>::iterator vector<T, Alloc>::erase(iterator first, iterator last) {
-        iterator i = copy(last, finish, first);
+        iterator i = MySTL::copy(last, finish, first);
         destroy(i, finish);
         finish = finish - (last - first);
         return first;
@@ -381,18 +388,18 @@ namespace MySTL {
             //因为可能有内存空间重叠的现象出现 因此需要分情况讨论
             // "插入点之后的现有元素" > "新增元素个数"
             if(elems_after > n) {
-                uninitialized_copy(finish-n, finish, finish);
+                MySTL::uninitialized_copy(finish-n, finish, finish);
                 finish += n;
-                copy_backward(position, old_finish-n, old_finish);
-                fill(position, position+n, value_copy);
+                MySTL::copy_backward(position, old_finish-n, old_finish);
+                MySTL::fill(position, position+n, value_copy);
             }
             // "插入点之后的现有元素" <= "新增元素个数"
             else {
-                uninitialized_fill_n(finish, n-elems_after, value_copy);
+                MySTL::uninitialized_fill_n(finish, n-elems_after, value_copy);
                 finish += n - elems_after;
-                uninitialized_copy(position, old_finish, finish);
+                MySTL::uninitialized_copy(position, old_finish, finish);
                 finish += elems_after;
-                fill(position, old_finish, value_copy);
+                MySTL::fill(position, old_finish, value_copy);
             }
         }
         //备用空间小于“新增元素个数” 需要重新为vector配置内存空间
@@ -405,11 +412,11 @@ namespace MySTL {
             iterator new_finish = new_start;
             try{
                 //将旧vector中插入点之前的元素复制到新空间
-                new_finish = uninitialized_copy(start, position, new_start);
+                new_finish = MySTL::uninitialized_copy(start, position, new_start);
                 //新增元素
-                new_finish = uninitialized_fill_n(new_finish, n, value);
+                new_finish = MySTL::uninitialized_fill_n(new_finish, n, value);
                 //将旧vector中插入点之后的元素复制到新空间
-                new_finish = uninitialized_copy(position, finish, new_finish);
+                new_finish = MySTL::uninitialized_copy(position, finish, new_finish);
             }
             catch(...) {
                 // "commit or rollback"
@@ -446,7 +453,7 @@ namespace MySTL {
     template<class ForwardIterator>
     void vector<T, Alloc>::range_insert(iterator position, ForwardIterator first, ForwardIterator last, forward_iterator_tag) {
         if(first == last) return;
-        size_type n = distance(first, last);
+        size_type n = MySTL::distance(first, last);
         //备用空间大等于”新增元素个数“
         if(size_type(end_of_storage-finish) >= n) {
             // 计算插入点之后的现有元素个数
@@ -455,21 +462,21 @@ namespace MySTL {
             //因为可能有内存空间重叠的现象出现 因此需要分情况讨论
             // "插入点之后的现有元素" > "新增元素个数"
             if(elems_after > n) {
-                uninitialized_copy(finish-n, finish, finish);
+                MySTL::uninitialized_copy(finish-n, finish, finish);
                 finish += n;
-                copy_backward(position, old_finish-n, old_finish);
-                copy(first, last, position);
+                MySTL::copy_backward(position, old_finish-n, old_finish);
+                MySTL::copy(first, last, position);
             }
             // "插入点之后的现有元素" <= "新增元素个数"
             else {
                 //前移elems_after个位置
                 ForwardIterator mid = first;
-                advance(mid, elems_after);
-                uninitialized_copy(mid, last, finish);
+                MySTL::advance(mid, elems_after);
+                MySTL::uninitialized_copy(mid, last, finish);
                 finish += n - elems_after;
-                uninitialized_copy(position, old_finish, finish);
+                MySTL::uninitialized_copy(position, old_finish, finish);
                 finish += elems_after;
-                copy(first, mid, position);
+                MySTL::copy(first, mid, position);
             }
         }
         //备用空间小于“新增元素个数” 需要重新为vector配置内存空间
@@ -482,11 +489,11 @@ namespace MySTL {
             iterator new_finish = new_start;
             try{
                 //将旧vector中插入点之前的元素复制到新空间
-                new_finish = uninitialized_copy(start, position, new_start);
+                new_finish = MySTL::uninitialized_copy(start, position, new_start);
                 //新增元素
-                new_finish = uninitialized_copy(first, last, new_finish);
+                new_finish = MySTL::uninitialized_copy(first, last, new_finish);
                 //将旧vector中插入点之后的元素复制到新空间
-                new_finish = uninitialized_copy(position, finish, new_finish);
+                new_finish = MySTL::uninitialized_copy(position, finish, new_finish);
             }
             catch(...) {
                 // "commit or rollback"
@@ -558,7 +565,7 @@ namespace MySTL {
         iterator new_start = data_allocator::allocate(old_size);
         iterator new_finish = new_start;
         try {
-            new_finish = uninitialized_copy(start, finish, new_start);
+            new_finish = MySTL::uninitialized_copy(start, finish, new_start);
         }
         catch(...) {
             //"commit or rollback"

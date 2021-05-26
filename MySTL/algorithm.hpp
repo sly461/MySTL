@@ -36,7 +36,7 @@ namespace MySTL
     //RandomAccessIterator版本
     template<class RandomAccessIterator, class T>
     void __fill(RandomAccessIterator first, RandomAccessIterator last, const T & value, random_access_iterator_tag) {
-        fill_n(first, last-first, value);
+        MySTL::fill_n(first, last-first, value);
     }
     template<class ForwardIterator, class T>
     void fill(ForwardIterator first, ForwardIterator last, const T & value) {
