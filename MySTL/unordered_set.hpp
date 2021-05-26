@@ -88,10 +88,37 @@ namespace MySTL {
         }
 
         //查找相关
-        
+        iterator find(const key_type& key) const { return rep.find(key); }
+        size_type count(const key_type& key) const { return rep.count(key); }
+        std::pair<iterator, iterator> equal_range(const key_type& key) const { return rep.equal_range(key); }
 
+        //erase相关
+        size_type erase(const key_type& key) { return rep.erase(key); }
+        void erase(iterator it) { rep.erase(it); }
+        void erase(iterator first, iterator last) { rep.erase(first, last); }
 
-    }; 
+        //声明友元 operator==
+        template<class Vl, class HF,
+                 class Eq, template<class t> class Al>
+        friend bool operator== (const unordered_set<Vl, HF, Eq, Al>& ht1,
+                                const unordered_set<Vl, HF, Eq, Al>& ht2);
+    };
+
+    /*****************************************************************************************
+     * operator== operator!=
+    *****************************************************************************************/
+    template<class Vl, class HF,
+             class Eq, template<class t> class Al>
+    bool operator== (const unordered_set<Vl, HF, Eq, Al>& us1,
+                     const unordered_set<Vl, HF, Eq, Al>& us2) {
+        return us1.rep == us2.rep;                     
+    }
+    template<class Vl, class HF,
+             class Eq, template<class t> class Al>
+    bool operator!= (const unordered_set<Vl, HF, Eq, Al>& us1,
+                     const unordered_set<Vl, HF, Eq, Al>& us2) {
+        return !(us1==us2);              
+    }
 }
 
 

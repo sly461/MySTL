@@ -297,7 +297,7 @@ namespace MySTL {
 
         //声明友元 operator== 注意此处template不能省略且模板参数名字不能和hashtable类相同
         template<class Vl, class Ky, class HF,
-             class Ex, class Eq, template<class t> class Al>
+                 class Ex, class Eq, template<class t> class Al>
         friend bool operator== (const hashtable<Vl, Ky, HF, Ex, Eq, Al>& ht1,
                                 const hashtable<Vl, Ky, HF, Ex, Eq, Al>& ht2);
         
