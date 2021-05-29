@@ -4,6 +4,7 @@
 #ifndef _AVLTREE_H_
 #define _AVLTREE_H_
 
+#include <utility>
 #include "allocator.hpp"
 
 namespace MySTL {
@@ -50,9 +51,6 @@ namespace MySTL {
         using pointer = Value*;
 
         node *cur;
-        //迫不得已添加一个AVL树的header节点
-        //为了operator--()中的特殊情况：cur为header时，实在无法判断cur是root节点还是header节点
-        node *header;
 
         __AVLTree_iterator() {}
         __AVLTree_iterator(node* n): cur(n) {}
@@ -102,7 +100,7 @@ namespace MySTL {
     __AVLTree_iterator<Value>& 
     __AVLTree_iterator<Value>:: operator--() {
         //特殊情况：cur为header时
-        if(cur == header) {
+        if(cur->height == -1) {
             cur = cur->right;
         }
         //若有左子节点
@@ -146,9 +144,6 @@ namespace MySTL {
         using pointer = const Value*;
 
         const node *cur;
-        //迫不得已添加一个AVL树的header节点
-        //为了operator--()中的特殊情况：cur为header时，实在无法判断cur是root节点还是header节点
-        const node *header;
 
         __AVLTree_const_iterator() {}
         __AVLTree_const_iterator(node* n): cur(n) {}
@@ -200,7 +195,7 @@ namespace MySTL {
     __AVLTree_const_iterator<Value>& 
     __AVLTree_const_iterator<Value>:: operator--() {
         //特殊情况：cur为header时
-        if(cur == header) {
+        if(cur->height == -1) {
             cur = cur->right;
         }
         //若有左子节点
@@ -257,6 +252,7 @@ namespace MySTL {
         //header是AVL树中辅助的头节点，其实值无意义
         //保证其父节点指向根节点root，同时root的父节点也指向header
         //左子节点指向AVL树中最小节点，右子节点指向AVL树中最大节点
+        //另：header的height设为-1，此值无意义，但可以用来标识header节点（iterator::operator--()中有用到）
         node* header;
         Compare key_compare;
 
@@ -266,18 +262,18 @@ namespace MySTL {
         
         //构造函数
         AVLTree(const Compare& comp=Compare()): node_count(0), key_compare(comp) { init(); }
-        AVLTree(const AVLTree& x): node_count(0), key_compare(x.key_compare) {
-            if(x.root() == nullptr) init();
+        AVLTree(const AVLTree& at): node_count(0), key_compare(x.key_compare) {
+            if(at.root() == nullptr) init();
             else {
                 init();
-                root() = copy(x.root(), header);
+                root() = copy(at.root(), header);
                 leftmost() = minimum(root());
                 rightmost() = maximum(root());
             }
-            node_count = x.node_count;
+            node_count = at.node_count;
         }
         //赋值操作符
-        AVLTree& operator=(const AVLTree& x);
+        AVLTree& operator=(const AVLTree& at);
         ~AVLTree() { clear(); }
 
         void clear();
@@ -287,6 +283,35 @@ namespace MySTL {
         size_type size() const { return node_count; }
         size_type max_size() const { return size_type(-1); }
         bool empty() const { return node_count==0; }
+
+        //begin、end、key_comp
+        Compare key_comp() const { return key_compare; }
+        iterator begin() { return iterator(leftmost()); }
+        const_iterator begin() const { return const_iterator(leftmost()); }
+        iterator end() { return iterator(header); }
+        const_iterator end() const { return const_iterator(header); }
+
+        //插入相关
+        //插入元素，不允许重复
+        void insert_unique(const value_type& obj);
+         //插入序列
+        template<class InputIterator>
+        void insert_unique(InputIterator first, InputIterator last) { insert_unique(first, last, iterator_category(first)); }
+        //InputIterator类型
+        template<class InputIterator>
+        void insert_unique(InputIterator first, InputIterator last, input_iterator_tag);
+        //ForwardIterator类型及以上
+        template<class ForwardIterator>
+        void insert_unique(ForwardIterator first, ForwardIterator last, forward_iterator_tag);
+
+        //erase
+        
+
+        //友元声明
+        template<class Ky, class Vl, class KV,
+                 class Cp, template<class t> class Al>
+        friend bool operator== (const AVLTree<Ky, Vl, KV, Cp, Al>& at1,
+                                const AVLTree<Ky, Vl, KV, Cp, Al>& at2);
 
     protected:
         //节点的构造与初始化
@@ -306,6 +331,7 @@ namespace MySTL {
         static node* & parent(node* x) { return x->parent; }
         static reference value(node* x) { return x->val; }
         static const Key& key(node* x) { return KeyOfValue()(value(x)); }
+        static size_type height(node* x) { return x ? x->height : -1; }
         
         static node* minimum(node* x) { return node::minimum(x); }
         static node* maximum(node* x) { return node::maximum(x); }
@@ -314,6 +340,13 @@ namespace MySTL {
         //一些辅助函数
         node* copy(node* x, node* p);
         void init();
+        node* __insert(node* &tree, node* parent, const value_type& obj);
+
+        //四种情况对应的旋转操作
+        node* leftLeftRotation(node* x);
+        node* rightRightRotation(node* x);
+        node* leftRightRotation(node* x);
+        node* rightLeftRotation(node* x);
     };
 
     /*****************************************************************************************
@@ -323,21 +356,21 @@ namespace MySTL {
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>& 
-    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::operator=(const AVLTree& x) {
-        if(this != &x) {
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::operator=(const AVLTree& at) {
+        if(this != &at) {
             clear();
             node_count = 0;
-            key_compare = x.key_compare;
-            if(nullptr == x.root()) {
+            key_compare = at.key_compare;
+            if(nullptr == at.root()) {
                 root() = nullptr;
                 leftmost() = header;
                 rightmost() = header;
             }
             else {
-                root() = copy(x.root(), header);
+                root() = copy(at.root(), header);
                 leftmost() = minimum(root());
                 rightmost() = maximum(root());
-                node_count = x.node_count;
+                node_count = at.node_count;
             }
         }
         return *this;
@@ -355,12 +388,11 @@ namespace MySTL {
     }
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
-    void AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::swap(AVLTree& t) {
-        MySTL::swap(header, t.header);
-        MySTL::swap(node_count, t.node_count);
-        MySTL::swap(key_compare, t.key_compare);
+    void AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::swap(AVLTree& at) {
+        MySTL::swap(header, at.header);
+        MySTL::swap(node_count, at.node_count);
+        MySTL::swap(key_compare, at.key_compare);
     }
-
     /*****************************************************************************************
      * 节点的get、new、delete、clone
     *****************************************************************************************/
@@ -378,6 +410,7 @@ namespace MySTL {
         //配置空间
         node * n = get_node();
         n->left = n->right = n->parent = nullptr;
+        n->height = 0;
         //构造内容
         try {
             construct(&n->val, obj);
@@ -400,17 +433,20 @@ namespace MySTL {
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node* 
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::clone_node(node* n) {
         node * tmp = new_node(n->val);
+        tmp->height = n->height;
         tmp->left = tmp->right = tmp->parent = nullptr;
         return tmp;
     }
 
     /*****************************************************************************************
      * 一些辅助函数的具体实现
+     * init、copy、__insert
     *****************************************************************************************/
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
     void AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::init() {
         header = get_node();
+        header->height = -1;
         
         root() = nullptr;
         leftmost() = header;
@@ -445,10 +481,132 @@ namespace MySTL {
         }
         return top;
     }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::__insert(node* &tree, node* parent, const value_type& obj) {
+        if(nullptr == tree) {
+            tree = new_node(obj);
+            tree->parent = parent;
+        }
+        //插入到左子树
+        else if(key_compare(KeyOfValue()(obj), key(tree))) {
+            tree->left = __insert(tree->left, tree, obj);
+            //失去平衡
+            if(height(tree->left)-height(tree->right) >= 2) {
+                //LL情况
+                if(key_comp(KeyOfValue()(obj), key(tree->left)))
+                    tree = leftLeftRotation(tree);
+                //RR情况
+                else tree = rightRightRotation(tree);
+            }
+        }
+        else if(key_compare(key(tree), KeyOfValue()(obj))) {
+            tree->right = __insert(tree->right, tree, obj);
+            //失去平衡
+            if(height(tree->right)-height(tree->left) >= 2) {
+                //RR情况
+                if(key_comp(key(tree->right) ,KeyOfValue()(obj)))
+                    tree = rightRightRotation(tree);
+                //RL情况
+                else tree = rightLeftRotation(tree);
+            }
+        }
+        //当key相同时，以上两个if都返回false，插入失败 不应重复插入
+        else {}
+        //求高度 叶子节点高度为0，某节点的高度为max(其左右子节点高度)+1
+        tree->height = max(height(tree->left), height(tree->right))+1;
+
+        return tree;
+    }
+    /*****************************************************************************************
+     * 四种情况对应的旋转操作
+    *****************************************************************************************/
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::leftLeftRotation(node* x) {
+        node* n = x->left;
+        x->left = n->right;
+        n->right = x;
+        
+        x->height = max(height(x->left), height(x->right))+1;
+        n->height = max(height(n->left), x->height)+1;
+        
+        return n;
+    }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::rightRightRotation(node* x) {
+        node* n = x->right;
+        x->right = n->left;
+        n->left = x;
+        
+        x->height = max(height(x->left), height(x->right))+1;
+        n->height = max(height(n->right), x->height)+1;
+        
+        return n;
+    }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::leftRightRotation(node* x) {
+        x->left = rightRightRotation(x->left);
+        
+        return leftLeftRotation(x);
+    }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::rightLeftRotation(node* x) {
+        x->right = leftLeftRotation(x->right);
+
+        return rightRightRotation(x);
+    }
+    /*****************************************************************************************
+     * 插入相关
+    *****************************************************************************************/
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    void AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::insert_unique(const value_type& obj) {
+        __insert(root(), obj);
+    }
+    //插入序列
+    //InputIterator类型
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    template<class InputIterator>
+    void AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::insert_unique(InputIterator first, InputIterator last, input_iterator_tag) {
+        for( ; first!=last; first++)
+            insert_unique(*first);
+    }
+    //ForwardIterator类型及以上
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    template<class ForwardIterator>
+    void AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::insert_unique(ForwardIterator first, ForwardIterator last, forward_iterator_tag) {
+        size_type n = distance(first, last);
+        for( ; n>0; n--,first++)
+            insert_unique(*first);
+    }
 
     /*****************************************************************************************
-     * 一些辅助函数的具体实现
+     * operator==、operator!=
     *****************************************************************************************/
+    template<class Ky, class Vl, class KV,
+                 class Cp, template<class t> class Al>
+    bool operator== (const AVLTree<Ky, Vl, KV, Cp, Al>& at1,
+                     const AVLTree<Ky, Vl, KV, Cp, Al>& at2) {
+        return at1.size()==at2.size() && 
+               equal(at1.begin(), at1.end(), at2.begin());
+    }
+    template<class Ky, class Vl, class KV,
+                 class Cp, template<class t> class Al>
+    bool operator!= (const AVLTree<Ky, Vl, KV, Cp, Al>& at1,
+                     const AVLTree<Ky, Vl, KV, Cp, Al>& at2) {
+        return !(at1==at2);
+    }
 }
 
 
