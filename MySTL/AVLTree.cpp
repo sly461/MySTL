@@ -274,7 +274,7 @@ namespace MySTL {
         }
         //赋值操作符
         AVLTree& operator=(const AVLTree& at);
-        ~AVLTree() { clear(); }
+        ~AVLTree() { clear(); delete_node(header); }
 
         void clear();
         void swap(AVLTree& t);
@@ -316,7 +316,9 @@ namespace MySTL {
         const_iterator upper_bound(const key_type& k) const;
 
         //erase
-        
+        void erase(const key_type& k);
+        void erase(iterator pos);
+        void erase(iterator first, iterator last);
 
         //友元声明
         template<class Ky, class Vl, class KV,
@@ -352,6 +354,10 @@ namespace MySTL {
         node* copy(node* x, node* p);
         void init();
         node* __insert(node* &tree, node* parent, const value_type& obj);
+        //供以上erase函数使用
+        node* __erase(node* &tree, node* x);
+        //此函数特殊，删除以x为顶的整棵子树 供clear使用
+        void __erase(node* x);
 
         //四种情况对应的旋转操作
         node* leftLeftRotation(node* x);
@@ -390,7 +396,7 @@ namespace MySTL {
              class Compare, template <class T> class Alloc>
     void AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::clear() {
         if(0 != node_count) {
-            erase(root());
+            __erase(root());
             root() = nullptr;
             leftmost() = header;
             rightmost() = header;
@@ -451,7 +457,7 @@ namespace MySTL {
 
     /*****************************************************************************************
      * 一些辅助函数的具体实现
-     * init、copy、__insert
+     * init、copy、__insert、__erase
     *****************************************************************************************/
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
@@ -488,7 +494,7 @@ namespace MySTL {
         }
         catch(...) {
             // "commit or rollback"
-            erase(top);
+            __erase(top);
         }
         return top;
     }
@@ -499,6 +505,7 @@ namespace MySTL {
         if(nullptr == tree) {
             tree = new_node(obj);
             tree->parent = parent;
+            node_count++;
         }
         //插入到左子树
         else if(key_compare(KeyOfValue()(obj), key(tree))) {
@@ -530,6 +537,72 @@ namespace MySTL {
 
         return tree;
     }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node* 
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::__erase(node* &tree, node* x) {
+        if(nullptr==tree || nullptr==x)
+            return nullptr;  
+        //删除节点在左子树
+        if(key_compare(key(x), key(tree))) {
+            tree->left = __erase(tree->left, x);
+            //失衡
+            if(height(tree->right)-height(tree->left) >= 2) {
+                node* r = tree->right;
+                if(height(r->left) > height(r->right))
+                    tree = rightLeftRotation(tree);
+                else 
+                    tree = rightRightRotation(tree);
+            }
+        }
+        else if(key_comp(key(tree), key(x))) {
+            tree->right = __erase(tree->right, x);
+            if(height(tree->left)-height(tree->right) >= 2) {
+                node* l = tree->left;
+                if(height(l->right)>height(l->left))
+                    tree = leftRightRotation(tree);
+                else tree = leftLeftRotation(tree);
+            }
+        }
+        //tree是需要删除的节点
+        else {
+            //左右子节点均非空
+            if((nullptr!=tree->left) && (nullptr!=tree->right)) {
+                //若tree的左子树比右子树高 找出左子树中最大节点 将该最大节点的值赋值给tree 删除该最大节点
+                if(height(tree->left) > height(tree->right)) {
+                    node* max = maximum(tree->left);
+                    tree->val = max->val;
+                    tree->left = __erase(tree->left, max);
+                }
+                else {
+                    node* min = minimum(tree->right);
+                    tree->val = min->val;
+                    tree->right = __erase(tree->right, min);
+                }
+            }
+            else {
+                node* tmp = tree;
+                tree = (nullptr!=tree->left) ? tree->left : tree->right;
+                if(nullptr != tree) {
+                    tree->parent = tmp->parent;
+                }
+                delete_node(tmp);
+                node_count--;
+            }
+        }
+        return tree;
+    }
+    // erase without rebalancing
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    void AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::__erase(node* x) {
+        while(nullptr != x) {
+            __erase(right(x));
+            node* y = left(x);
+            delete_node(x);
+            x = y;
+        }
+    } 
     /*****************************************************************************************
      * 四种情况对应的旋转操作
     *****************************************************************************************/
@@ -717,6 +790,28 @@ namespace MySTL {
             else x = right(x);
         }
         return const_iterator(y);
+    }
+    /*****************************************************************************************
+     * erase相关
+    *****************************************************************************************/
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    void AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::erase(const key_type& k) {
+        node* x;
+        if(nullptr != (x=find(k)))
+            root() = __erase(root(), x);
+    }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    void AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::erase(iterator pos) {
+        root() = __erase(root(), pos.cur);
+    }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    void AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::erase(iterator first, iterator last) {
+        if(first==begin() && last==end())
+            clear();
+        else while(first != last) erase(first++);
     }
     /*****************************************************************************************
      * operator==、operator!=
