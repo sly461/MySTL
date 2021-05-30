@@ -304,6 +304,17 @@ namespace MySTL {
         template<class ForwardIterator>
         void insert_unique(ForwardIterator first, ForwardIterator last, forward_iterator_tag);
 
+        //查找
+        iterator find(const key_type& k);
+        const_iterator find(const key_type& k) const;
+        size_type count(const key_type& k) const;
+        std::pair<iterator, iterator> equal_range(const key_type& k);
+        std::pair<const_iterator, const_iterator> equal_range(const key_type& k) const;
+        iterator lower_bound(const key_type& k);
+        const_iterator lower_bound(const key_type& k) const;
+        iterator upper_bound(const key_type& k);
+        const_iterator upper_bound(const key_type& k) const;
+
         //erase
         
 
@@ -590,7 +601,123 @@ namespace MySTL {
         for( ; n>0; n--,first++)
             insert_unique(*first);
     }
+    /*****************************************************************************************
+     * 查找相关
+    *****************************************************************************************/
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::iterator 
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::find(const key_type& k) {
+        node* y = header;
+        node* x = root();
+        
+        while(nullptr != x) {
+            //k<=key(x) 则向左 并用y记录x
+            if(!key_compare(key(x), k))
+                y = x, x = left(x);
+            else x = right(x);
+        }
 
+        iterator j = iterator(y);
+        //满足j!=end()并且k>=key(x) 结合之前的k<=key(x) 因此k=key(x)
+        return (j==end() || key_compare(k, key(j.cur))) ? end() : j;
+    }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::const_iterator
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::find(const key_type& k) const {
+        const node* y = header;
+        const node* x = root();
+        
+        while(nullptr != x) {
+            //k<=key(x) 则向左 并用y记录x
+            if(!key_compare(key(x), k))
+                y = x, x = left(x);
+            else x = right(x);
+        }
+
+        const_iterator j = const_iterator(y);
+        //满足j!=end()并且k>=key(x) 结合之前的k<=key(x) 因此k=key(x)
+        return (j==end() || key_compare(k, key(j.cur))) ? end() : j;
+    }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::size_type 
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::count(const key_type& k) const {
+        std::pair<const_iterator, const_iterator> p = equal_range(k);
+        size_type n = distance(p.first, p.second);
+        return n;
+    }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    std::pair<typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::iterator,
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::iterator>
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::equal_range(const key_type& k) {
+        return std::pair<iterator, iterator>(lower_bound(k), upper_bound(k));
+    }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    std::pair<typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::const_iterator,
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::const_iterator>
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::equal_range(const key_type& k) const {
+        return std::pair<const_iterator, const_iterator>(lower_bound(k), upper_bound(k));
+    }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::iterator 
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::lower_bound(const key_type& k) {
+        node* y = header;
+        node* x = root();
+        while(nullptr != x) {
+            //k<=key(x)
+            if(!key_compare(key(x), k))
+                y = x, x = left(x);
+            else x = right(x);
+        }
+        return iterator(y);
+    }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::const_iterator 
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::lower_bound(const key_type& k) const {
+        const node* y = header;
+        const node* x = root();
+        while(nullptr != x) {
+            //k<=key(x)
+            if(!key_compare(key(x), k))
+                y = x, x = left(x);
+            else x = right(x);
+        }
+        return const_iterator(y);
+    }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::iterator 
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::upper_bound(const key_type& k) {
+        node* y = header;
+        node* x = root();
+        while(nullptr != x) {
+            //k<key(x)
+            if(key_compare(k, key(x)))
+                y = x, x = left(x);
+            else x = right(x);
+        }
+        return iterator(y);
+    }
+    template<class Key, class Value, class KeyOfValue,
+             class Compare, template <class T> class Alloc>
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::const_iterator 
+    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::upper_bound(const key_type& k) const {
+        const node* y = header;
+        const node* x = root();
+        while(nullptr != x) {
+            //k<key(x)
+            if(key_compare(k, key(x)))
+                y = x, x = left(x);
+            else x = right(x);
+        }
+        return const_iterator(y);
+    }
     /*****************************************************************************************
      * operator==、operator!=
     *****************************************************************************************/
