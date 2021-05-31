@@ -6,6 +6,7 @@
 
 #include <utility>
 #include "allocator.hpp"
+#include "algorithm.hpp"
 
 namespace MySTL {
     /*****************************************************************************************
@@ -14,7 +15,7 @@ namespace MySTL {
     template<class Value>
     struct __AVLTree_node {
         Value val;
-        size_t height;  //高度
+        long long height;  //高度
         __AVLTree_node* left;
         __AVLTree_node* right;
         __AVLTree_node* parent;
@@ -262,7 +263,7 @@ namespace MySTL {
         
         //构造函数
         AVLTree(const Compare& comp=Compare()): node_count(0), key_compare(comp) { init(); }
-        AVLTree(const AVLTree& at): node_count(0), key_compare(x.key_compare) {
+        AVLTree(const AVLTree& at): node_count(0), key_compare(at.key_compare) {
             if(at.root() == nullptr) init();
             else {
                 init();
@@ -344,7 +345,7 @@ namespace MySTL {
         static node* & parent(node* x) { return x->parent; }
         static reference value(node* x) { return x->val; }
         static const Key& key(node* x) { return KeyOfValue()(value(x)); }
-        static size_type height(node* x) { return x ? x->height : -1; }
+        static long long height(node* x) { return x ? x->height : -1; }
         
         static node* minimum(node* x) { return node::minimum(x); }
         static node* maximum(node* x) { return node::maximum(x); }
@@ -415,14 +416,14 @@ namespace MySTL {
     *****************************************************************************************/
    template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
-    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node* 
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node* 
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::get_node() {
         //配置空间
         return node_allocator::allocate();
     }
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
-    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node* 
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node* 
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::new_node(const value_type& obj) {
         //配置空间
         node * n = get_node();
@@ -447,7 +448,7 @@ namespace MySTL {
     }
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
-    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node* 
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node* 
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::clone_node(node* n) {
         node * tmp = new_node(n->val);
         tmp->height = n->height;
@@ -471,7 +472,7 @@ namespace MySTL {
     }
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
-    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node* 
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node* 
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::copy(node* x, node* p) {
         //递归地copy
         node * top = clone_node(x);
@@ -500,7 +501,7 @@ namespace MySTL {
     }
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
-    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::__insert(node* &tree, node* parent, const value_type& obj) {
         if(nullptr == tree) {
             tree = new_node(obj);
@@ -513,7 +514,7 @@ namespace MySTL {
             //失去平衡
             if(height(tree->left)-height(tree->right) >= 2) {
                 //LL情况
-                if(key_comp(KeyOfValue()(obj), key(tree->left)))
+                if(key_compare(KeyOfValue()(obj), key(tree->left)))
                     tree = leftLeftRotation(tree);
                 //RR情况
                 else tree = rightRightRotation(tree);
@@ -524,7 +525,7 @@ namespace MySTL {
             //失去平衡
             if(height(tree->right)-height(tree->left) >= 2) {
                 //RR情况
-                if(key_comp(key(tree->right) ,KeyOfValue()(obj)))
+                if(key_compare(key(tree->right) ,KeyOfValue()(obj)))
                     tree = rightRightRotation(tree);
                 //RL情况
                 else tree = rightLeftRotation(tree);
@@ -539,7 +540,7 @@ namespace MySTL {
     }
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
-    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node* 
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node* 
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::__erase(node* &tree, node* x) {
         if(nullptr==tree || nullptr==x)
             return nullptr;  
@@ -555,7 +556,7 @@ namespace MySTL {
                     tree = rightRightRotation(tree);
             }
         }
-        else if(key_comp(key(tree), key(x))) {
+        else if(key_compare(key(tree), key(x))) {
             tree->right = __erase(tree->right, x);
             if(height(tree->left)-height(tree->right) >= 2) {
                 node* l = tree->left;
@@ -588,6 +589,15 @@ namespace MySTL {
                 }
                 delete_node(tmp);
                 node_count--;
+                //更新
+                if(nullptr == root()) {
+                    leftmost() = header;
+                    rightmost() = header;
+                }
+                else {
+                    leftmost() = minimum(root());
+                    rightmost() = maximum(root());
+                }
             }
         }
         return tree;
@@ -608,12 +618,16 @@ namespace MySTL {
     *****************************************************************************************/
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
-    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::leftLeftRotation(node* x) {
         node* n = x->left;
         x->left = n->right;
         n->right = x;
-        
+        //parent
+        n->parent = x->parent;
+        x->parent = n;
+        if(nullptr != x->left) x->left->parent = x;
+
         x->height = max(height(x->left), height(x->right))+1;
         n->height = max(height(n->left), x->height)+1;
         
@@ -621,11 +635,15 @@ namespace MySTL {
     }
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
-    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::rightRightRotation(node* x) {
         node* n = x->right;
         x->right = n->left;
         n->left = x;
+        //parent
+        n->parent = x->parent;
+        x->parent = n;
+        if(nullptr != x->right) x->right->parent = x;
         
         x->height = max(height(x->left), height(x->right))+1;
         n->height = max(height(n->right), x->height)+1;
@@ -634,7 +652,7 @@ namespace MySTL {
     }
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
-    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::leftRightRotation(node* x) {
         x->left = rightRightRotation(x->left);
         
@@ -642,7 +660,7 @@ namespace MySTL {
     }
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
-    AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
+    typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::node*
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::rightLeftRotation(node* x) {
         x->right = leftLeftRotation(x->right);
 
@@ -654,7 +672,13 @@ namespace MySTL {
     template<class Key, class Value, class KeyOfValue,
              class Compare, template <class T> class Alloc>
     void AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::insert_unique(const value_type& obj) {
-        __insert(root(), obj);
+        size_type old = node_count;
+        __insert(root(), header, obj);
+        //更新
+        if(old < node_count) {
+            leftmost() = minimum(root());
+            rightmost() = maximum(root());
+        }
     }
     //插入序列
     //InputIterator类型
@@ -699,8 +723,8 @@ namespace MySTL {
              class Compare, template <class T> class Alloc>
     typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::const_iterator
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::find(const key_type& k) const {
-        const node* y = header;
-        const node* x = root();
+        node* y = header;
+        node* x = root();
         
         while(nullptr != x) {
             //k<=key(x) 则向左 并用y记录x
@@ -753,8 +777,8 @@ namespace MySTL {
              class Compare, template <class T> class Alloc>
     typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::const_iterator 
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::lower_bound(const key_type& k) const {
-        const node* y = header;
-        const node* x = root();
+        node* y = header;
+        node* x = root();
         while(nullptr != x) {
             //k<=key(x)
             if(!key_compare(key(x), k))
@@ -781,8 +805,8 @@ namespace MySTL {
              class Compare, template <class T> class Alloc>
     typename AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::const_iterator 
     AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::upper_bound(const key_type& k) const {
-        const node* y = header;
-        const node* x = root();
+        node* y = header;
+        node* x = root();
         while(nullptr != x) {
             //k<key(x)
             if(key_compare(k, key(x)))
@@ -798,7 +822,7 @@ namespace MySTL {
              class Compare, template <class T> class Alloc>
     void AVLTree<Key, Value, KeyOfValue, Compare, Alloc>::erase(const key_type& k) {
         node* x;
-        if(nullptr != (x=find(k)))
+        if(nullptr != (x=find(k).cur))
             root() = __erase(root(), x);
     }
     template<class Key, class Value, class KeyOfValue,
