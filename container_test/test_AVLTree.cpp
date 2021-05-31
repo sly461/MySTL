@@ -49,7 +49,10 @@ int main() {
     ite1 = at.find(1);
     if(ite1 == at.end()) cout << "1 not found" <<endl;
 
-    AVLTree<int, int, _Identity<int>, less<int>, allocator> at2(at);
+    AVLTree<int, int, _Identity<int>, less<int>, allocator> at2;
+
+    at2 = at;
+    cout << *at2.lower_bound(1) << endl;
     
     if(at == at2) cout << "at=at2" <<endl;
 
