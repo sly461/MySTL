@@ -344,7 +344,7 @@ namespace MySTL {
         static node* & right(node* x) { return x->right; }
         static node* & parent(node* x) { return x->parent; }
         static reference value(node* x) { return x->val; }
-        static const Key& key(node* x) { return KeyOfValue()(value(x)); }
+        static const Key& key(const node* x) { return KeyOfValue()(value(const_cast<node*>(x))); }
         static long long height(node* x) { return x ? x->height : -1; }
         
         static node* minimum(node* x) { return node::minimum(x); }

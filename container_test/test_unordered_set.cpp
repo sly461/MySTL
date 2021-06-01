@@ -47,5 +47,13 @@ int main()
 		cout << *it << endl;
 	}
 
+	int test[]= {0,1,2,3};
+	unordered_set<int> s1(test, test+4);
+	unordered_set<int> s2(s1);
+	//s2 = s1;
+	for(auto i: s2) cout << i;
+	cout<<endl;
+
+	
 	return 0;
 }

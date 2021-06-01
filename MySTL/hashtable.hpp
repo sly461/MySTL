@@ -371,7 +371,7 @@ namespace MySTL {
         // 清除掉己方的buckets，调用vector::clear
         buckets.clear();
         // 若己方的空间大于对方，就不动，若己方空间小于对方，则增大
-        size_type new_size = ht->buckets.size();
+        size_type new_size = ht.buckets.size();
         buckets.reserve(new_size);
         // 初始化n个元素为null指针
         buckets.insert(buckets.end(), new_size, nullptr);

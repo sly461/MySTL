@@ -55,6 +55,13 @@ namespace MySTL {
         unordered_set(InputIterator first, InputIterator last, size_type n, const hasher& hf, const key_equal& eql)
             : rep(n, hf, eql) { rep.insert_unique(first, last); }
 
+        unordered_set(const unordered_set& x): rep(x.rep) {}
+        //赋值操作
+        unordered_set& operator=(const unordered_set& x) {
+            rep = x.rep;
+            return *this;
+        }
+
         //几个size相关函数
         size_type size() const { return rep.size(); }
         size_type max_size() const { return rep.max_size(); }

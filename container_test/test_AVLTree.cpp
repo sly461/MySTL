@@ -41,10 +41,13 @@ int main() {
 
     for(; ite1!=ite2; ++ite1)
         cout << *ite1;
-    cout << endl;
+    cout << endl;                   //02345
 
     ite1 = at.find(3);
     if(ite1 != at.end()) cout << "3 found" <<endl;
+    at.erase(ite1);
+    ite1 = at.find(3);
+    if(ite1 == at.end()) cout << "3 not found" <<endl;
 
     ite1 = at.find(1);
     if(ite1 == at.end()) cout << "1 not found" <<endl;
