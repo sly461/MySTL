@@ -12,9 +12,9 @@ using MySTL::allocator;
 
 int main() {
     int i;
-    int ia[5] = {0,1,2,3,4};
+    int ia[16] = {3,2,1,4,5,6,7,16,15,14,13,12,11,10,8,9};
 
-    set<int> s(ia, ia+5);
+    set<int> s(ia, ia+16);
 
     cout<<"size="<<s.size() <<endl;        //5
     cout<<"3 count=" <<s.count(3) <<endl;  //1
@@ -40,7 +40,7 @@ int main() {
     if(ite1 != s.end()) cout << "3 found" <<endl;
 
     ite2 = s.find(0);
-    s.erase(ite2, ite1);
+    if(ite2!=s.end())s.erase(ite2, ite1);
 
     ite1 = s.begin();
     ite2 = s.end();

@@ -7,6 +7,7 @@
 #include <utility>
 #include "allocator.hpp"
 #include "iterator.hpp"
+#include "algorithm.hpp"
 #include "vector.hpp"
 
 namespace MySTL {

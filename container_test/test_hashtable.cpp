@@ -52,6 +52,7 @@ int main() {
         if(n!=0)
             cout<<"bucket["<<i<<"] has"<<n<<" elems."<<endl;
     }
+    int test = 1;
     /*
     输出：
     bucket[0] has 1 elems.
@@ -64,43 +65,43 @@ int main() {
     hashtable<T>::resize()得知的结果)，我刻意将元素加到54个，
     看看是否发生重建表*/
 
-    for(int i = 0;i<=47;i++)
-        iht.insert_equal(i);
-    cout<<iht.size()<<endl;        //54
-    cout<<iht.bucket_count()<<endl;    //97确实扩容了(重建)
+    // for(int i = 0;i<=47;i++)
+    //     iht.insert_equal(i);
+    // cout<<iht.size()<<endl;        //54
+    // cout<<iht.bucket_count()<<endl;    //97确实扩容了(重建)
 
-    for (int i; i<iht.bucket_count();i++ )
-    {
-        int n = iht.elems_in_bucket(i);
-        if(n!=0)
-            cout<<"bucket["<<i<<"] has"<<n<<" elems."<<endl;
-    }
-    /*打印的结果
-    bucket[2]到bucket[11]的节点个数为2
-    其余的bucket[0]~bucket[47]的节点个数为1
-    此外，bucket[53],[55],[59],[63]的节点个数均为1*/
+    // for (int i=0; i<iht.bucket_count(); i++)
+    // {
+    //     int n = iht.elems_in_bucket(i);
+    //     if(n!=0)
+    //         cout<<"bucket["<<i<<"] has"<<n<<" elems."<<endl;
+    // }
+    // /*打印的结果
+    // bucket[2]到bucket[11]的节点个数为2
+    // 其余的bucket[0]~bucket[47]的节点个数为1
+    // 此外，bucket[53],[55],[59],[63]的节点个数均为1*/
 
-    /*以迭代器变量hashtable,将所有节点打印出来*/
-    ite = iht.begin();
-    for(int i = 0;i<iht.size();i++,ite++)
-        cout<< *ite << ' ';
-    cout<<endl;
+    // /*以迭代器变量hashtable,将所有节点打印出来*/
+    // ite = iht.begin();
+    // for(int i = 0;i<iht.size();i++,ite++)
+    //     cout<< *ite << ' ';
+    // cout<<endl;
 
-    cout<<*(iht.find(2))<<endl;//2
-    cout<<iht.count(2)<<endl;//2
+    // cout<<*(iht.find(2))<<endl;//2
+    // cout<<iht.count(2)<<endl;//2
 
-    auto _pair = iht.equal_range(2);
-    for(auto i=_pair.first; i!=_pair.second; i++) {
-        cout << *i << " ";
-    }
-    cout<<endl;
+    // auto _pair = iht.equal_range(2);
+    // for(auto i=_pair.first; i!=_pair.second; i++) {
+    //     cout << *i << " ";
+    // }
+    // cout<<endl;
 
-    hashtable<int,
-        int,
-        hash<int>,
-        _Identity<int>,
-        equal_to<int>,
-        allocator> iht2(50,hash<int>(), equal_to<int>());    //指定保留50个bucket(桶)
+    // hashtable<int,
+    //     int,
+    //     hash<int>,
+    //     _Identity<int>,
+    //     equal_to<int>,
+    //     allocator> iht2(50,hash<int>(), equal_to<int>());    //指定保留50个bucket(桶)
 
-    cout << (iht!=iht2 ? "true" : "false") << endl;
+    // cout << (iht!=iht2 ? "true" : "false") << endl;
 }

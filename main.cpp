@@ -83,7 +83,7 @@ int main()
     MySTL::vector<testA> testVec1(15, testA(111));
     testVec1.resize(10);
     testVec1.shrink_to_fit();
-    for(int i=0; i<15; i++) std::cout << testVec1[i].a << " ";
+    for(int i=0; i<10; i++) std::cout << testVec1[i].a << " "; //15
     std::cout << std::endl;
     
 
@@ -107,7 +107,7 @@ int main()
     std::cout<< "size: " << testVec2.size() << "capacity: " << testVec2.capacity() << std::endl;
     testVec2.shrink_to_fit();
     std::cout<< "size: " << testVec2.size() << "capacity: " << testVec2.capacity() << std::endl;
-    for(int i=0; i<13; i++) std::cout << testVec2[i] << " ";
+    for(int i=0; i<10; i++) std::cout << testVec2[i] << " "; //13
     std::cout << std::endl;
 
     testVec1 = testVec;
@@ -142,6 +142,7 @@ int main()
     std::cout<< *aa << std::endl;
     std::vector<int> kkk(10);
     std::cout<< kkk[0] << std::endl;
+    delete aa;
 
     MySTL::vector<int> vecInt;
     //vecInt: 0, 1, 2, 3, 4, 444
