@@ -516,8 +516,8 @@ namespace MySTL {
                 //LL情况
                 if(key_compare(KeyOfValue()(obj), key(tree->left)))
                     tree = leftLeftRotation(tree);
-                //RR情况
-                else tree = rightRightRotation(tree);
+                //LR情况
+                else tree = leftRightRotation(tree);
             }
         }
         else if(key_compare(key(tree), KeyOfValue()(obj))) {
