@@ -74,7 +74,7 @@ void set_test()
 #if PERFORMANCE_TEST_ON
   std::cout << "[--------------------- Performance Testing ---------------------]" << std::endl;
   std::cout << "|---------------------|-------------|-------------|-------------|" << std::endl;
-  std::cout << "|       insert       |";
+  std::cout << "|        insert       |";
 #if LARGER_TEST_DATA_ON
   CON_TEST_P1(set<int>, insert, rand(), LEN1 _L, LEN2 _L, LEN3 _L);
 #else
