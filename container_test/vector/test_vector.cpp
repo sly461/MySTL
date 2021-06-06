@@ -1,143 +1,120 @@
-#include <iostream>
-#include <string>
-#include "../MySTL/vector.hpp"
+#ifndef MYTINYSTL_VECTOR_TEST_H_
+#define MYTINYSTL_VECTOR_TEST_H_
 
-using std::cin;
-using std::cout;
-using std::endl;
-using std::string;
-using MySTL::vector;
+// vector test : 测试 vector 的接口与 push_back 的性能
 
-/**
- * vector 的操作
- */
-template <typename T>
-void printVector(const vector<T>& vec)
+#include <vector>
+
+#include "../../MySTL/vector.hpp"
+#include "../test.hpp"
+
+namespace MySTL
 {
-	for (auto x : vec) {
-		cout << x << " ";
-	}
+namespace test
+{
+namespace vector_test
+{
 
-	cout << endl;
+void vector_test()
+{
+  std::cout << "[===============================================================]\n";
+  std::cout << "[----------------- Run container test : vector -----------------]\n";
+  std::cout << "[-------------------------- API test ---------------------------]\n";
+  int a[] = { 1,2,3,4,5 };
+  MySTL::vector<int> v1;
+  MySTL::vector<int> v2(10);
+  MySTL::vector<int> v3(size_t(10), 1);
+  MySTL::vector<int> v4(a, a + 5);
+  MySTL::vector<int> v5(v2);
+  MySTL::vector<int> v6(std::move(v2));
+  MySTL::vector<int> v7{ 1,2,3,4,5,6,7,8,9 };
+  MySTL::vector<int> v8, v9, v10;
+  v8 = v3;
+  v9 = std::move(v3);
+  v10 = { 1,2,3,4,5,6,7,8,9 };
+
+  //FUN_AFTER(v1, v1.assign(8, 8));
+  //FUN_AFTER(v1, v1.assign(a, a + 5));
+  //FUN_AFTER(v1, v1.emplace(v1.begin(), 0));
+  //FUN_AFTER(v1, v1.emplace_back(6));
+  FUN_AFTER(v1, v1.push_back(6));
+  FUN_AFTER(v1, v1.insert(v1.end(), 7));
+  FUN_AFTER(v1, v1.insert(v1.begin() + 2, (size_t)2, 3));
+  FUN_AFTER(v1, v1.insert(v1.begin(), a, a + 5));
+  FUN_AFTER(v1, v1.pop_back());
+  FUN_AFTER(v1, v1.erase(v1.begin()));
+  FUN_AFTER(v1, v1.erase(v1.begin(), v1.begin() + 2));
+  //FUN_AFTER(v1, v1.reverse());
+  FUN_AFTER(v1, v1.swap(v4));
+  FUN_VALUE(*v1.begin());
+  FUN_VALUE(*(v1.end() - 1));
+  //FUN_VALUE(*v1.rbegin());
+  //FUN_VALUE(*(v1.rend() - 1));
+  FUN_VALUE(v1.front());
+  FUN_VALUE(v1.back());
+  FUN_VALUE(v1[0]);
+  FUN_VALUE(v1.at(1));
+//   int* p = v1.data();
+//   *p = 10;
+//   *++p = 20;
+//   p[1] = 30;
+  std::cout << " After change v1.data() :" << "\n";
+  COUT(v1);
+  std::cout << std::boolalpha;
+  FUN_VALUE(v1.empty());
+  std::cout << std::noboolalpha;
+  FUN_VALUE(v1.size());
+  FUN_VALUE(v1.max_size());
+  FUN_VALUE(v1.capacity());
+  FUN_AFTER(v1, v1.resize(10));
+  FUN_VALUE(v1.size());
+  FUN_VALUE(v1.capacity());
+  FUN_AFTER(v1, v1.shrink_to_fit());
+  FUN_VALUE(v1.size());
+  FUN_VALUE(v1.capacity());
+  FUN_AFTER(v1, v1.resize(6, 6));
+  FUN_VALUE(v1.size());
+  FUN_VALUE(v1.capacity());
+  FUN_AFTER(v1, v1.shrink_to_fit());
+  FUN_VALUE(v1.size());
+  FUN_VALUE(v1.capacity());
+  FUN_AFTER(v1, v1.clear());
+  FUN_VALUE(v1.size());
+  FUN_VALUE(v1.capacity());
+  FUN_AFTER(v1, v1.reserve(5));
+  FUN_VALUE(v1.size());
+  FUN_VALUE(v1.capacity());
+  FUN_AFTER(v1, v1.reserve(20));
+  FUN_VALUE(v1.size());
+  FUN_VALUE(v1.capacity());
+  FUN_AFTER(v1, v1.shrink_to_fit());
+  FUN_VALUE(v1.size());
+  FUN_VALUE(v1.capacity());
+  PASSED;
+#if PERFORMANCE_TEST_ON
+  std::cout << "[--------------------- Performance Testing ---------------------]\n";
+  std::cout << "|---------------------|-------------|-------------|-------------|\n";
+  std::cout << "|      push_back      |";
+#if LARGER_TEST_DATA_ON
+  CON_TEST_P1(vector<int>, push_back, rand(), LEN1 _LL, LEN2 _LL, LEN3 _LL);
+#else
+  CON_TEST_P1(vector<int>, push_back, rand(), LEN1 _L, LEN2 _L, LEN3 _L);
+#endif
+  std::cout << "\n";
+  std::cout << "|---------------------|-------------|-------------|-------------|\n";
+  PASSED;
+#endif
+  std::cout << "[----------------- End container test : vector -----------------]\n";
 }
 
-int main()
-{
-	// 构造函数:四种形式
-	vector<string> iv(2, "hi");
-	printVector(iv);
+} // namespace vector_test
+} // namespace test
+} // namespace MySTL
 
-	vector<string> sv{"why", "always", "me"};
-	printVector(sv);
-
-	vector<string> sv2(sv.begin(), sv.end());
-	printVector(sv2);
-
-	vector<string> sv3(sv);
-	printVector(sv3);
-
-	// operator= 赋值运算符
-	vector<string> sv4;
-	sv4 = sv;
-	printVector(sv4);
-
-	// assign
-	// vector<char> cv;
-	// cv.assign(5, 'x');
-	// printVector(cv);
-	
-	// vector<char> cv1;
-	// cv1.assign(cv.begin(), cv.end());
-	// printVector(cv1);
-
-	// at(索引)
-	cout << sv4.at(1) << endl;
-
-	// operator[] 
-	sv4[1] = "a";
-	printVector(sv4);
-
-	// front 容器首元素
-	cout << sv.front() << endl;
-	
-	// back 容器最后一个元素
-	cout << sv.back() << endl;
-
-	// begin 返回指向容器第一个元素的迭代器
-	// end 返回指向容器尾端的迭代器
-	for (vector<string>::iterator it = sv.begin(); it != sv.end(); it++) {
-		cout << *it << " ";	
-	}
-	cout << endl;
-
-	// rbegin 返回一个指向容器最后一个元素的反向迭代器 
-	// rend 返回一个指向容器前端的反向迭代器
-	// for (vector<string>::reverse_iterator it = sv.rbegin(); it != sv.rend(); it++) {
-	// 	cout << *it << " ";
-	// }
-	// cout << endl;
-
-	// empty 若容器为空则为 true ，否则为 false
-	if (sv.empty()) {
-		cout << "container is null." << endl;
-	} else {
-		cout << "container is not null." << endl;
-	}
-
-	// size	容器中的元素个数
-	cout << sv.size() << endl;
-
-	// max_size 元素数量的最大值
-	cout << sv.max_size() << endl;
-
-	// capacity 当前分配存储的容量
-	cout << sv.capacity() << endl;
-
-	// resize 改变容器中可存储元素的个数 
-	sv.resize(10);
-	cout << sv.capacity() << endl;
-	
-	// shrink_to_fit 请求移除未使用的容量
-	sv.shrink_to_fit();
-	cout << sv.capacity() << endl;
-
-  	// clear 从容器移除所有元素
-	iv.clear();
-	printVector(iv);
-
-	// insert:三种形式
-	auto it = sv.begin();
-	it = sv.insert(it, "YES");
-	printVector(sv);
-	
-	sv.insert(it, 2, "NO");
-	printVector(sv);
-
-	it = sv.begin();
-	vector<string> sv5(2, "xx");
-	sv.insert(it+2, sv5.begin(), sv5.end());
-	printVector(sv);
-
-	// erase 从容器移除指定的元素
-	sv.erase(sv.begin());
-	printVector(sv);
-	
-	sv.erase(sv.begin() + 2, sv.begin() + 4);
-	printVector(sv);
-	
-	// push_back 向容器尾部插入元素
-	cout << sv.size() << endl;
-	sv.push_back("add");
-	printVector(sv);
-
-	// pop_back 移除容器的最末元素
-	sv.pop_back();
-	printVector(sv);
-	
-	// swap
-	sv.swap(sv5);
-	printVector(sv);
-	printVector(sv5);
-
+int main() {
+	MySTL::test::vector_test::vector_test();
 	return 0;
 }
+
+
+#endif // !MYTINYSTL_VECTOR_TEST_H_

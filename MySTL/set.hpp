@@ -57,7 +57,7 @@ namespace MySTL {
         bool empty() const { return t.empty(); }
         size_type size() const { return t.size(); }
         size_type max_size() const { return t.max_size(); }
-        void swap(set& x) { t.swap(x); }
+        void swap(set& x) { t.swap(x.t); }
         
         //insert
         void insert(const value_type& x) { t.insert_unique(x); }

@@ -216,7 +216,7 @@ namespace MySTL {
             start = rhs.start;
             finish = rhs.finish;
             end_of_storage = rhs.end_of_storage;
-            rhs.start = rhs.finsh = rhs.end_of_storage = nullptr;
+            rhs.start = rhs.finish = rhs.end_of_storage = nullptr;
         }
         return *this;
     }
