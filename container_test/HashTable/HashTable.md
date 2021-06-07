@@ -126,8 +126,6 @@
 
 ## STL hashtable
 
-哈希表原理：[hash table](https://github.com/steveLauwh/Data-Structures-And-Algorithms/tree/master/Hash%20Table)
-
 SGI STL hash table 使用（separate chaining）开链法来解决（碰撞 collision）问题。
 
 ### hashtable 内部实现
