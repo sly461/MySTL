@@ -1,7 +1,7 @@
 #ifndef MYTINYSTL_SET_TEST_H_
 #define MYTINYSTL_SET_TEST_H_
 
-// set test : 测试 set, multiset 的接口与它们 insert 的性能
+// set test : 测试 set 的接口与 insert 的性能
 
 #include <set>
 
