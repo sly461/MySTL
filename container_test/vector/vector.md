@@ -116,7 +116,14 @@ void insert( iterator pos, InputIt first, InputIt last);
 
 **vector配置空间的原则**
 
-如果原大小为0，则配置1个元素大小的空间；否则配置原大小两倍的空间。
+- insert一个新元素：如果原大小为0，则配置1个元素大小的空间；否则配置原大小两倍的空间。
+
+- insert多个新元素：max(原长度的两倍, 原长度+新增元素个数)，原长度如果为0，则原长度的两倍取为1
+
+  ```c++
+  //n为新增元素个数
+  new_size = old_size + max(old_size, n);
+  ```
 
 #### resize、reserve、shrink_to_fit
 
